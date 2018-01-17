@@ -4,16 +4,17 @@ interface
 
 uses
   API_MVC,
-  API_MVC_VCLDB;
+  API_MVC_VCLDB,
+  mTrackFiles;
 
 type
   TController = class(TControllerVCLDB)
   private
     procedure InitDB; override;
   published
-    procedure AssignAudioInfo;
-    procedure OnModelAudioFilesInit(aModel: TModelAbstract);
-    procedure OnModelAudioFilesEnd(const aMsg: string; aModel: TModelAbstract);
+    procedure DefineAudioInfo;
+    procedure OnModelTrackFilesInit(aModel: TModelTrackFiles);
+    procedure OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTrackFiles);
     procedure PullTrackFiles;
   end;
 
@@ -22,40 +23,31 @@ implementation
 uses
   API_DB_MySQL,
   eTrack,
-  mMediaFiles,
+  System.Classes,
   vAudioInfo,
   vMain,
   Vcl.Controls;
 
-procedure TController.OnModelAudioFilesInit(aModel: TModelAbstract);
+procedure TController.OnModelTrackFilesInit(aModel: TModelTrackFiles);
 begin
-
+  aModel.inDropedFiles := ViewMain.DropedFiles;
 end;
 
-procedure TController.OnModelAudioFilesEnd(const aMsg: string; aModel: TModelAbstract);
-var
-  TrackFile: TTrackFile;
-  PArr: PTrackFileArr;
-  TrackFileArr: TTrackFileArr;
+procedure TController.OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTrackFiles);
 begin
-  //debug
-  //GetMem(PArr, SizeOf(TTrackFileArr));
-
-  {PArr := FDataPointer.Items['TrackFiles'];
-  TrackFileArr := PArr^;
-
-  for TrackFile in TrackFileArr do
-    ViewAudioInfo.RenderDropedFiles([TrackFile.FileInfo.FileName]);}
+  TThread.Synchronize(nil, procedure()
+    begin
+      ViewAudioInfo.RenderTrackFiles(aModel.outTrackFileArr);
+    end
+  );
 end;
 
 procedure TController.PullTrackFiles;
 begin
-  FDataPointer.AddOrSetValue('DropedFiles', @ViewMain.DropedFiles);
-
-  CallModel<TModelAudioFiles>;
+  CallModel<TModelTrackFiles>;
 end;
 
-procedure TController.AssignAudioInfo;
+procedure TController.DefineAudioInfo;
 begin
   ViewAudioInfo := VCL.CreateView<TViewAudioInfo>;
 
