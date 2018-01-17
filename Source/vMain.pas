@@ -38,14 +38,14 @@ uses
 procedure TViewMain.WMDropFiles(var Msg: TWMDropFiles);
 begin
   FDropedFiles := FDragDropEngine.GetDropedFiles(Msg);
-  SendMessage('PullExternalAudioInfo');
+  SendMessage('AssignAudioInfo');
 end;
 
 procedure TViewMain.btnParseAudioInfoClick(Sender: TObject);
 begin
   inherited;
 
-  SendMessage('PullExternalAudioInfo');
+  SendMessage('AssignAudioInfo');
 end;
 
 procedure TViewMain.FormCreate(Sender: TObject);

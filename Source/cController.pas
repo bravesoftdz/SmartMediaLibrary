@@ -3,6 +3,7 @@ unit cController;
 interface
 
 uses
+  API_MVC,
   API_MVC_VCLDB;
 
 type
@@ -10,28 +11,55 @@ type
   private
     procedure InitDB; override;
   published
-    procedure PullExternalAudioInfo;
+    procedure AssignAudioInfo;
+    procedure OnModelAudioFilesInit(aModel: TModelAbstract);
+    procedure OnModelAudioFilesEnd(const aMsg: string; aModel: TModelAbstract);
+    procedure PullTrackFiles;
   end;
 
 implementation
 
 uses
   API_DB_MySQL,
-  mFiles,
-  vAudioInfoExt,
+  eTrack,
+  mMediaFiles,
+  vAudioInfo,
   vMain,
   Vcl.Controls;
 
-procedure TController.PullExternalAudioInfo;
+procedure TController.OnModelAudioFilesInit(aModel: TModelAbstract);
 begin
-  ViewAudioInfoExt := VCL.CreateView<TViewAudioInfoExt>;
 
+end;
+
+procedure TController.OnModelAudioFilesEnd(const aMsg: string; aModel: TModelAbstract);
+var
+  TrackFile: TTrackFile;
+  PArr: PTrackFileArr;
+  TrackFileArr: TTrackFileArr;
+begin
+  //debug
+  //GetMem(PArr, SizeOf(TTrackFileArr));
+
+  {PArr := FDataPointer.Items['TrackFiles'];
+  TrackFileArr := PArr^;
+
+  for TrackFile in TrackFileArr do
+    ViewAudioInfo.RenderDropedFiles([TrackFile.FileInfo.FileName]);}
+end;
+
+procedure TController.PullTrackFiles;
+begin
   FDataPointer.AddOrSetValue('DropedFiles', @ViewMain.DropedFiles);
-  CallModel<TModelMediaFiles>;
 
-  //ViewAudioInfoExt.RenderDropedFiles(ViewMain.DropedFiles);
+  CallModel<TModelAudioFiles>;
+end;
 
-  if ViewAudioInfoExt.ShowModal = mrOK then
+procedure TController.AssignAudioInfo;
+begin
+  ViewAudioInfo := VCL.CreateView<TViewAudioInfo>;
+
+  if ViewAudioInfo.ShowModal = mrOK then
     begin
 
     end;

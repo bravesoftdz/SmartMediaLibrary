@@ -1,4 +1,4 @@
-unit vAudioInfoExt;
+unit vAudioInfo;
 
 interface
 
@@ -7,8 +7,9 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, API_MVC_VCL, Vcl.StdCtrls;
 
 type
-  TViewAudioInfoExt = class(TViewVCLBase)
+  TViewAudioInfo = class(TViewVCLBase)
     mmo1: TMemo;
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
@@ -17,13 +18,20 @@ type
   end;
 
 var
-  ViewAudioInfoExt: TViewAudioInfoExt;
+  ViewAudioInfo: TViewAudioInfo;
 
 implementation
 
 {$R *.dfm}
 
-procedure TViewAudioInfoExt.RenderDropedFiles(aDropedFiles: TArray<string>);
+procedure TViewAudioInfo.FormShow(Sender: TObject);
+begin
+  inherited;
+
+  SendMessage('PullTrackFiles');
+end;
+
+procedure TViewAudioInfo.RenderDropedFiles(aDropedFiles: TArray<string>);
 var
   FileName: string;
 begin

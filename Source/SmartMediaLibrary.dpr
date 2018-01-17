@@ -1,4 +1,4 @@
-program MyMediaLibrary;
+program SmartMediaLibrary;
 
 uses
   Vcl.Forms,
@@ -10,11 +10,11 @@ uses
   API_DB in '..\..\Libs\Delphi\API_DB.pas',
   API_MVC_VCLDB in '..\..\Libs\Delphi\API_MVC_VCLDB.pas',
   API_DB_MySQL in '..\..\Libs\Delphi\API_DB_MySQL.pas',
-  vAudioInfoExt in 'vAudioInfoExt.pas' {ViewAudioInfoExt},
+  vAudioInfo in 'vAudioInfo.pas' {ViewAudioInfo},
   API_DragDrop in '..\..\Libs\Delphi\API_DragDrop.pas',
   API_Files in '..\..\Libs\Delphi\API_Files.pas',
   eTrack in 'eTrack.pas',
-  mFiles in 'mFiles.pas';
+  mMediaFiles in 'mMediaFiles.pas';
 
 {$R *.res}
 

@@ -1,5 +1,5 @@
 inherited ViewMain: TViewMain
-  Caption = 'My Media Library'
+  Caption = 'Smart Media Library'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96

@@ -1,7 +1,8 @@
-inherited ViewAudioInfoExt: TViewAudioInfoExt
-  Caption = 'ViewAudioInfoExt'
+inherited ViewAudioInfo: TViewAudioInfo
+  Caption = 'ViewAudioInfo'
   ClientHeight = 380
-  ExplicitHeight = 418
+  OnShow = FormShow
+  ExplicitHeight = 419
   PixelsPerInch = 96
   TextHeight = 13
   object mmo1: TMemo
@@ -9,8 +10,6 @@ inherited ViewAudioInfoExt: TViewAudioInfoExt
     Top = 8
     Width = 337
     Height = 364
-    Lines.Strings = (
-      'mmo1')
     TabOrder = 0
   end
 end
