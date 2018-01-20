@@ -14,7 +14,9 @@ uses
   API_DragDrop in '..\..\Libs\Delphi\API_DragDrop.pas',
   API_Files in '..\..\Libs\Delphi\API_Files.pas',
   eTrack in 'eTrack.pas',
-  mTrackFiles in 'mTrackFiles.pas';
+  mTrackFiles in 'mTrackFiles.pas',
+  API_ORM in '..\..\Libs\Delphi\API_ORM.pas',
+  API_Crypt in '..\..\Libs\Delphi\API_Crypt.pas';
 
 {$R *.res}
 
