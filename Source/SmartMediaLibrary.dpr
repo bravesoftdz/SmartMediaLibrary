@@ -10,13 +10,17 @@ uses
   API_DB in '..\..\Libs\Delphi\API_DB.pas',
   API_MVC_VCLDB in '..\..\Libs\Delphi\API_MVC_VCLDB.pas',
   API_DB_MySQL in '..\..\Libs\Delphi\API_DB_MySQL.pas',
-  vAudioInfo in 'vAudioInfo.pas' {ViewAudioInfo},
+  vAudioAppend in 'vAudioAppend.pas' {ViewAudioAppend},
   API_DragDrop in '..\..\Libs\Delphi\API_DragDrop.pas',
   API_Files in '..\..\Libs\Delphi\API_Files.pas',
   eTrack in 'eTrack.pas',
   mTrackFiles in 'mTrackFiles.pas',
   API_ORM in '..\..\Libs\Delphi\API_ORM.pas',
-  API_Crypt in '..\..\Libs\Delphi\API_Crypt.pas';
+  API_Crypt in '..\..\Libs\Delphi\API_Crypt.pas',
+  eCommon in 'eCommon.pas',
+  eAlbum in 'eAlbum.pas',
+  eArtist in 'eArtist.pas',
+  eTrackFile in 'eTrackFile.pas';
 
 {$R *.res}
 

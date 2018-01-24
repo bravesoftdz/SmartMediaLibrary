@@ -6,6 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   API_DragDrop,
+  API_MVC,
   API_MVC_VCL;
 
 type
@@ -18,7 +19,7 @@ type
     { Private declarations }
     FDragDropEngine: TDragDropEngine;
     FDropedFiles: TArray<string>;
-    procedure InitMVC; override;
+    procedure InitMVC(var aControllerClass: TControllerClass); override;
     procedure WMDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
   public
     { Public declarations }
@@ -38,14 +39,14 @@ uses
 procedure TViewMain.WMDropFiles(var Msg: TWMDropFiles);
 begin
   FDropedFiles := FDragDropEngine.GetDropedFiles(Msg);
-  SendMessage('DefineAudioInfo');
+  SendMessage('AddToLibrary');
 end;
 
 procedure TViewMain.btnParseAudioInfoClick(Sender: TObject);
 begin
   inherited;
 
-  SendMessage('DefineAudioInfo');
+  SendMessage('AddToLibrary');
 end;
 
 procedure TViewMain.FormCreate(Sender: TObject);
@@ -62,9 +63,9 @@ begin
   FDragDropEngine.Free;
 end;
 
-procedure TViewMain.InitMVC;
+procedure TViewMain.InitMVC(var aControllerClass: TControllerClass);
 begin
-  FControllerClass := TController;
+  aControllerClass := TController;
   ViewMain := Self;
 end;
 

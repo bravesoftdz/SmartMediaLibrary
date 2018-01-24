@@ -3,20 +3,26 @@ unit cController;
 interface
 
 uses
-  API_MVC,
+  API_DB,
   API_MVC_VCLDB,
   mTrackFiles;
 
 type
   TController = class(TControllerVCLDB)
   private
-    procedure InitDB; override;
+    procedure InitDB(var aDBEngineClass: TDBEngineClass; out aConnectParams: TConnectParams;
+      out aConnectOnCreate: Boolean); override;
+  protected
+    procedure AfterCreate; override;
   published
-    procedure DefineAudioInfo;
+    procedure AddToLibrary;
     procedure OnModelTrackFilesInit(aModel: TModelTrackFiles);
     procedure OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTrackFiles);
     procedure PullTrackFiles;
   end;
+
+var
+  DBEngine: TDBEngine;
 
 implementation
 
@@ -24,9 +30,14 @@ uses
   API_DB_MySQL,
   eTrack,
   System.Classes,
-  vAudioInfo,
+  vAudioAppend,
   vMain,
   Vcl.Controls;
+
+procedure TController.AfterCreate;
+begin
+  cController.DBEngine := Self.DBEngine;
+end;
 
 procedure TController.OnModelTrackFilesInit(aModel: TModelTrackFiles);
 begin
@@ -37,7 +48,11 @@ procedure TController.OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTra
 begin
   TThread.Synchronize(nil, procedure()
     begin
-      ViewAudioInfo.RenderTrackFiles(aModel.outTrackFileArr);
+      ViewAudioAppend.RenderArtistList(aModel.outArtistList);
+      ViewAudioAppend.RenderTrackFiles(aModel.outTrackFileArr);
+
+      ViewAudioAppend.ArtistList := aModel.outArtistList;
+      //ViewAudioAppend.RenderTrackFiles(aModel.outTrackFileArr);
     end
   );
 end;
@@ -47,21 +62,24 @@ begin
   CallModel<TModelTrackFiles>;
 end;
 
-procedure TController.DefineAudioInfo;
+procedure TController.AddToLibrary;
 begin
-  ViewAudioInfo := VCL.CreateView<TViewAudioInfo>;
+  ViewAudioAppend := VCL.CreateView<TViewAudioAppend>;
 
-  if ViewAudioInfo.ShowModal = mrOK then
+  if ViewAudioAppend.ShowModal = mrOK then
     begin
-
+      ViewAudioAppend.ArtistList.Store;
     end;
+
+  ViewAudioAppend.ArtistList.Free;
 end;
 
-procedure TController.InitDB;
+procedure TController.InitDB(var aDBEngineClass: TDBEngineClass;
+  out aConnectParams: TConnectParams; out aConnectOnCreate: Boolean);
 begin
-  FDBEngineClass := TMySQLEngine;
-  FConnectOnCreate := True;
-  FConnectParams.GetFormFile('Settings\MySQL.ini');
+  aDBEngineClass := TMySQLEngine;
+  aConnectOnCreate := True;
+  aConnectParams.GetFormFile('Settings\MySQL.ini');
 end;
 
 end.
