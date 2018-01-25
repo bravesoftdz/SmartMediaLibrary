@@ -50,6 +50,8 @@ type
     ID3v1: TID3v1;
     ID3v2: TID3v2;
     ID: string;
+    NewFileName: string;
+    NewPath: string;
   end;
 
   TTrackFileArrHelper = record helper for TArray<TTrackFile>

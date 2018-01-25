@@ -10,6 +10,7 @@ uses
 type
   TAlbum = class(TEntity)
   private
+    FAlbumTypeID: Integer;
     FArtistID: Integer;
     FTitle: string;
     FTrackRels: TTrackRelList;
@@ -18,6 +19,7 @@ type
     class function GetStructure: TSructure; override;
     property TrackRels: TTrackRelList read GetTrackRels;
   published
+    property AlbumTypeID: Integer read FAlbumTypeID write FAlbumTypeID;
     property ArtistID: Integer read FArtistID write FArtistID;
     property Title: string read FTitle write FTitle;
   end;

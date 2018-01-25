@@ -19,12 +19,14 @@ type
   TTrackRel = class(TEntity)
   private
     FAlbumID: Integer;
+    FOrder: Integer;
     FTrack: TTrack;
     FTrackID: Integer;
   public
     class function GetStructure: TSructure; override;
   published
     property AlbumID: Integer read FAlbumID write FAlbumID;
+    property Order: Integer read FOrder write FOrder;
     property Track: TTrack read FTrack write FTrack;
     property TrackID: Integer read FTrackID write FTrackID;
   end;

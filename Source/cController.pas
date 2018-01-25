@@ -16,10 +16,16 @@ type
     procedure AfterCreate; override;
   published
     procedure AddToLibrary;
+    procedure OnAfterTrackFileFill(const aMsg: string; aModel: TModelTrackFiles);
     procedure OnModelTrackFilesInit(aModel: TModelTrackFiles);
     procedure OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTrackFiles);
     procedure PullTrackFiles;
   end;
+
+const
+  AUDIO_PATH = 'D:\Music\';
+  FILE_FORMAT = '{track.num} - {track.title}';
+  PATH_FORMAT = '{artist.name}\{album.type}\{album.year} {album.title}';
 
 var
   DBEngine: TDBEngine;
@@ -28,11 +34,21 @@ implementation
 
 uses
   API_DB_MySQL,
+  eArtist,
   eTrack,
   System.Classes,
   vAudioAppend,
   vMain,
   Vcl.Controls;
+
+procedure TController.OnAfterTrackFileFill(const aMsg: string; aModel: TModelTrackFiles);
+begin
+  TThread.Synchronize(nil, procedure()
+    begin
+      ViewAudioAppend.RenderTrackFile(aModel.outTrackFile);
+    end
+  );
+end;
 
 procedure TController.AfterCreate;
 begin
@@ -48,11 +64,7 @@ procedure TController.OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTra
 begin
   TThread.Synchronize(nil, procedure()
     begin
-      ViewAudioAppend.RenderArtistList(aModel.outArtistList);
-      ViewAudioAppend.RenderTrackFiles(aModel.outTrackFileArr);
-
       ViewAudioAppend.ArtistList := aModel.outArtistList;
-      //ViewAudioAppend.RenderTrackFiles(aModel.outTrackFileArr);
     end
   );
 end;
@@ -67,9 +79,7 @@ begin
   ViewAudioAppend := VCL.CreateView<TViewAudioAppend>;
 
   if ViewAudioAppend.ShowModal = mrOK then
-    begin
-      ViewAudioAppend.ArtistList.Store;
-    end;
+    ViewAudioAppend.ArtistList.Store;
 
   ViewAudioAppend.ArtistList.Free;
 end;

@@ -20,7 +20,7 @@ type
   public
     inDropedFiles: TArray<string>;
     outArtistList: TArtistList;
-    outTrackFileArr: TArray<TTrackFile>;
+    outTrackFile: TTrackFile;
     procedure Start; override;
   end;
 
@@ -116,6 +116,8 @@ begin
       TrackRel.Track := TTrack.Create;
       TrackRel.Track.Title := TrackVariants[0];
       Album.TrackRels.Add(TrackRel);
+
+      Track := TrackRel.Track;
     end;
   aTrackFile.Track := Track;
 end;
@@ -125,7 +127,6 @@ var
   FileName: string;
   FileInfo: TFileInfo;
   FileInfoArr: TArray<TFileInfo>;
-  TrackFile: TTrackFile;
 begin
   FileInfoArr := [];
   outArtistList := TArtistList.Create([], []);
@@ -133,17 +134,18 @@ begin
   for FileName in inDropedFiles do
     FileInfoArr := FileInfoArr + TFilesEngine.GetFileInfoArr(FileName);
 
-  outTrackFileArr := [];
   for FileInfo in FileInfoArr do
     begin
-      TrackFile.ID := THashMD5.GetHashString(FileInfo.FullPath);
-      TrackFile.FileInfo := FileInfo;
-      TrackFile.ID3v1.LoadFromFile(FileInfo.FullPath);
-      TrackFile.ID3v2.LoadFromFile(FileInfo.FullPath);
+      outTrackFile.ID := THashMD5.GetHashString(FileInfo.FullPath);
+      outTrackFile.FileInfo := FileInfo;
+      outTrackFile.ID3v1.LoadFromFile(FileInfo.FullPath);
+      outTrackFile.ID3v2.LoadFromFile(FileInfo.FullPath);
 
-      ApplyTrackToArtistList(outArtistList, TrackFile);
+      //поиск в инете
 
-      outTrackFileArr := outTrackFileArr + [TrackFile];
+      ApplyTrackToArtistList(outArtistList, outTrackFile);
+
+      SendMessage('OnAfterTrackFileFill');
     end;
 end;
 

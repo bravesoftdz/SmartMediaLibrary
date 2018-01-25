@@ -2,6 +2,8 @@ inherited ViewAudioAppend: TViewAudioAppend
   Caption = 'ViewAudioAppend'
   ClientHeight = 452
   ClientWidth = 729
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   ExplicitWidth = 745
   ExplicitHeight = 490
@@ -21,29 +23,56 @@ inherited ViewAudioAppend: TViewAudioAppend
     Top = 0
     Width = 305
     Height = 411
-    ActivePage = tsArtist
+    ActivePage = tsFile
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 472
     object tsArtist: TTabSheet
       Caption = 'Artist'
       ImageIndex = 3
-      ExplicitWidth = 298
+      object bcArtistTitle: TLabeledEdit
+        Left = 64
+        Top = 24
+        Width = 185
+        Height = 21
+        EditLabel.Width = 20
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Title'
+        LabelPosition = lpLeft
+        TabOrder = 0
+      end
     end
     object tsAlbum: TTabSheet
       Caption = 'Album'
       ImageIndex = 4
-      ExplicitLeft = 2
-      ExplicitWidth = 300
+      object bcAlbumTitle: TLabeledEdit
+        Left = 56
+        Top = 24
+        Width = 177
+        Height = 21
+        EditLabel.Width = 20
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Title'
+        LabelPosition = lpLeft
+        TabOrder = 0
+      end
     end
     object tsTrack: TTabSheet
       Caption = 'Track'
       ImageIndex = 5
-      ExplicitWidth = 353
+      object bcTrackTitle: TLabeledEdit
+        Left = 37
+        Top = 32
+        Width = 233
+        Height = 21
+        EditLabel.Width = 20
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Title'
+        LabelPosition = lpLeft
+        TabOrder = 0
+      end
     end
     object tsFile: TTabSheet
       Caption = 'File'
-      ExplicitWidth = 298
       object leFileName: TLabeledEdit
         Left = 56
         Top = 24
@@ -68,11 +97,34 @@ inherited ViewAudioAppend: TViewAudioAppend
         ReadOnly = True
         TabOrder = 1
       end
+      object leNewFileName: TLabeledEdit
+        Left = 56
+        Top = 112
+        Width = 233
+        Height = 21
+        EditLabel.Width = 46
+        EditLabel.Height = 13
+        EditLabel.Caption = 'File Name'
+        LabelPosition = lpLeft
+        ReadOnly = True
+        TabOrder = 2
+      end
+      object leNewPath: TLabeledEdit
+        Left = 56
+        Top = 139
+        Width = 233
+        Height = 21
+        EditLabel.Width = 22
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Path'
+        LabelPosition = lpLeft
+        ReadOnly = True
+        TabOrder = 3
+      end
     end
     object tsID3v1: TTabSheet
       Caption = 'Tag ID3v1'
       ImageIndex = 1
-      ExplicitWidth = 298
       object sbxTagID3v1: TScrollBox
         Left = 0
         Top = 0
@@ -85,7 +137,6 @@ inherited ViewAudioAppend: TViewAudioAppend
         Color = clWindow
         ParentColor = False
         TabOrder = 0
-        ExplicitWidth = 298
         object leTrack: TLabeledEdit
           Left = 64
           Top = 14
@@ -168,7 +219,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     object tsID3v2: TTabSheet
       Caption = 'Tag ID3v2'
       ImageIndex = 2
-      ExplicitWidth = 298
       object sbxTagID3v2: TScrollBox
         Left = 0
         Top = 0
@@ -181,7 +231,6 @@ inherited ViewAudioAppend: TViewAudioAppend
         Color = clWindow
         ParentColor = False
         TabOrder = 0
-        ExplicitWidth = 298
         object leT2Album: TLabeledEdit
           Left = 72
           Top = 137
@@ -370,7 +419,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     Caption = 'pnlButtons'
     ShowCaption = False
     TabOrder = 1
-    ExplicitWidth = 554
     object btnOk: TButton
       Left = 567
       Top = 8
@@ -398,7 +446,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     Align = alClient
     Caption = 'pnlTreeViews'
     TabOrder = 2
-    ExplicitWidth = 245
     object splHorizontal: TSplitter
       Left = 1
       Top = 138
@@ -424,8 +471,8 @@ inherited ViewAudioAppend: TViewAudioAppend
       Header.Font.Style = []
       Header.MainColumn = -1
       TabOrder = 0
+      OnFocusChanged = vstLibTreeFocusChanged
       OnGetText = vstLibTreeGetText
-      ExplicitWidth = 243
       Columns = <>
     end
     object vstTrackFiles: TVirtualStringTree
@@ -450,7 +497,6 @@ inherited ViewAudioAppend: TViewAudioAppend
       OnFocusChanged = vstTrackFilesFocusChanged
       OnGetText = vstTrackFilesGetText
       OnGetNodeDataSize = vstTrackFilesGetNodeDataSize
-      ExplicitWidth = 243
       Columns = <
         item
           CaptionAlignment = taCenter

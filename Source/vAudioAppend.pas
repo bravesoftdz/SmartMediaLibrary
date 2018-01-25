@@ -7,12 +7,19 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, VirtualTrees, Vcl.Graphics,
   Vcl.ExtCtrls, Vcl.ComCtrls,
   API_MVC_VCL,
+  API_ORM_VCLBind,
   eAlbum,
   eArtist,
   eTrack,
   eTrackFile;
 
 type
+  TNodeData = record
+    FileName: WideString;
+    ID: ShortString;
+    Path: WideString;
+  end;
+
   TViewAudioAppend = class(TViewVCLBase)
     splVertical: TSplitter;
     pgcPages: TPageControl;
@@ -56,6 +63,11 @@ type
     tsArtist: TTabSheet;
     tsAlbum: TTabSheet;
     tsTrack: TTabSheet;
+    bcArtistTitle: TLabeledEdit;
+    bcAlbumTitle: TLabeledEdit;
+    bcTrackTitle: TLabeledEdit;
+    leNewFileName: TLabeledEdit;
+    leNewPath: TLabeledEdit;
     procedure FormShow(Sender: TObject);
     procedure vstTrackFilesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
@@ -65,24 +77,35 @@ type
       Node: PVirtualNode; Column: TColumnIndex);
     procedure vstLibTreeGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure vstLibTreeFocusChanged(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     { Private declarations }
     FArtistList: TArtistList;
+    FBind: TORMBind;
     FTrackFileArr: TArray<TTrackFile>;
-    procedure RenderAlbumList(aParentNode: PVirtualNode; aAlbumList: TAlbumList);
-    procedure RenderTrackFileDetail(aTrackFileID: string);
+    procedure DoRenderTrackFile(aTrackFile: TTrackFile);
+    procedure RenderAlbum(aArtist: TArtist; aAlbum: TAlbum);
+    procedure RenderAlbumDetail(aAlbum: TAlbum);
+    procedure RenderArtist(aArtist: TArtist);
+    procedure RenderArtistDetail(aArtist: TArtist);
+    procedure RenderTrackDetail(const aTrackFileID: string);
+    procedure RenderTrackFileDetail(const aTrackFileID: string);
+    procedure SetAllPagesInvisible;
+    procedure SetPagesVisible(aPages: TArray<TTabSheet>);
   public
     { Public declarations }
-    procedure RenderArtistList(aArtistList: TArtistList);
     procedure RenderTrackFile(aTrackFile: TTrackFile);
-    procedure RenderTrackFiles(aTrackFileArr: TArray<TTrackFile>);
     property ArtistList: TArtistList read FArtistList write FArtistList;
   end;
 
-  TNodeData = record
-    FileName: WideString;
-    ID: ShortString;
-    Path: WideString;
+  TVSTreeHelper = class helper for TVirtualStringTree
+  private
+    function DoFindNode<T: class>(aParentNode: PVirtualNode; aObject: T): PVirtualNode;
+  public
+    function FindNode<T: class>(aObject: T): PVirtualNode;
   end;
 
 var
@@ -92,30 +115,106 @@ implementation
 
 {$R *.dfm}
 
-procedure TViewAudioAppend.RenderAlbumList(aParentNode: PVirtualNode; aAlbumList: TAlbumList);
+procedure TViewAudioAppend.SetPagesVisible(aPages: TArray<TTabSheet>);
 var
-  Album: TAlbum;
-  VirtualNode: PVirtualNode;
+  TabSheet: TTabSheet;
 begin
-  for Album in aAlbumList do
-    VirtualNode := vstLibTree.AddChild(aParentNode, Album);
+  SetAllPagesInvisible;
+
+  for TabSheet in aPages do
+    TabSheet.TabVisible := True;
 end;
 
-procedure TViewAudioAppend.RenderArtistList(aArtistList: TArtistList);
+procedure TViewAudioAppend.SetAllPagesInvisible;
 var
-  Artist: TArtist;
+  i: Integer;
+begin
+  for i := 0 to pgcPages.PageCount - 1 do
+    pgcPages.Pages[i].TabVisible := False;
+end;
+
+procedure TViewAudioAppend.RenderTrackDetail(const aTrackFileID: string);
+var
+  Track: TTrack;
+begin
+  Track := FTrackFileArr.FindByID(aTrackFileID).Track;
+  FBind.BindEntity(Track, 'Track');
+end;
+
+procedure TViewAudioAppend.RenderAlbumDetail(aAlbum: TAlbum);
+begin
+  FBind.BindEntity(aAlbum, 'Album');
+end;
+
+procedure TViewAudioAppend.RenderArtistDetail(aArtist: TArtist);
+begin
+  FBind.BindEntity(aArtist, 'Artist');
+end;
+
+procedure TViewAudioAppend.DoRenderTrackFile(aTrackFile: TTrackFile);
+var
+  NodeData: TNodeData;
   VirtualNode: PVirtualNode;
 begin
-  for Artist in aArtistList do
-    begin
-      VirtualNode := vstLibTree.AddChild(nil, Artist);
+  NodeData.ID := aTrackFile.ID;
+  NodeData.FileName := aTrackFile.FileInfo.FileName;
+  NodeData.Path := aTrackFile.FileInfo.FullPath;
 
-      RenderAlbumList(VirtualNode, Artist.AlbumList);
-      vstLibTree.Expanded[VirtualNode] := True;
+  VirtualNode := vstTrackFiles.AddChild(nil);
+  VirtualNode.SetData<TNodeData>(NodeData);
+end;
+
+procedure TViewAudioAppend.RenderAlbum(aArtist: TArtist; aAlbum: TAlbum);
+var
+  AlbumNode: PVirtualNode;
+  ArtistNode: PVirtualNode;
+begin
+  AlbumNode := vstLibTree.FindNode<TAlbum>(aAlbum);
+
+  if AlbumNode = nil then
+    begin
+      ArtistNode := vstLibTree.FindNode<TArtist>(aArtist);
+      AlbumNode := vstLibTree.AddChild(ArtistNode, aAlbum);
+      vstLibTree.Expanded[ArtistNode] := True;
     end;
 end;
 
-procedure TViewAudioAppend.RenderTrackFileDetail(aTrackFileID: string);
+function TVSTreeHelper.DoFindNode<T>(aParentNode: PVirtualNode; aObject: T): PVirtualNode;
+var
+  NodeObject: T;
+  VirtualNode: PVirtualNode;
+begin
+  Result := nil;
+
+  for VirtualNode in ChildNodes(aParentNode) do
+    begin
+      NodeObject := GetNodeData<T>(VirtualNode);
+
+      if NodeObject = aObject then
+        Exit(VirtualNode);
+
+      Result := DoFindNode<T>(VirtualNode, aObject);
+    end;
+end;
+
+function TVSTreeHelper.FindNode<T>(aObject: T): PVirtualNode;
+begin
+  Result := DoFindNode<T>(Self.RootNode, aObject);
+end;
+
+procedure TViewAudioAppend.RenderArtist(aArtist: TArtist);
+var
+  VirtualNode: PVirtualNode;
+begin
+  VirtualNode := vstLibTree.FindNode<TArtist>(aArtist);
+
+  if VirtualNode = nil then
+    begin
+      VirtualNode := vstLibTree.AddChild(nil, aArtist);
+    end;
+end;
+
+procedure TViewAudioAppend.RenderTrackFileDetail(const aTrackFileID: string);
 var
   TrackFile: TTrackFile;
 begin
@@ -123,6 +222,8 @@ begin
 
   leFileName.Text := TrackFile.FileInfo.FileName;
   leFullPath.Text := TrackFile.FileInfo.FullPath;
+  leNewFileName.Text := TrackFile.NewFileName;
+  leNewPath.Text := TrackFile.NewPath;
 
   leTrack.Text := TrackFile.ID3v1.Track;
   leTitle.Text := TrackFile.ID3v1.Title;
@@ -151,14 +252,43 @@ begin
   leT2BPM.Text := TrackFile.ID3v2.BPM;
 end;
 
-procedure TViewAudioAppend.RenderTrackFiles(aTrackFileArr: TArray<TTrackFile>);
+procedure TViewAudioAppend.vstLibTreeFocusChanged(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex);
 var
+  Album: TAlbum;
+  Artist: TArtist;
+  Level: Integer;
   TrackFile: TTrackFile;
 begin
-  FTrackFileArr := aTrackFileArr;
+  inherited;
 
-  for TrackFile in FTrackFileArr do
-    RenderTrackFile(TrackFile);
+  vstTrackFiles.Clear;
+  Level := Sender.GetNodeLevel(Node);
+
+  case Level of
+    0:
+      begin
+        Artist := Sender.GetNodeData<TArtist>(Node);
+
+        RenderArtistDetail(Artist);
+        SetPagesVisible([tsArtist]);
+
+        for TrackFile in FTrackFileArr do
+          if TrackFile.Artist = Artist then
+            DoRenderTrackFile(TrackFile);
+      end;
+    1:
+      begin
+        Album := Sender.GetNodeData<TAlbum>(Node);
+
+        RenderAlbumDetail(Album);
+        SetPagesVisible([tsAlbum]);
+
+        for TrackFile in FTrackFileArr do
+          if TrackFile.Album = Album then
+            DoRenderTrackFile(TrackFile);
+      end;
+  end;
 end;
 
 procedure TViewAudioAppend.vstLibTreeGetText(Sender: TBaseVirtualTree;
@@ -198,7 +328,9 @@ begin
     begin
       NodeData := Sender.GetNodeData<TNodeData>(Sender.FocusedNode);
 
+      RenderTrackDetail(NodeData.ID);
       RenderTrackFileDetail(NodeData.ID);
+      SetPagesVisible([tsTrack, tsFile, tsID3v1, tsID3v2]);
     end;
 end;
 
@@ -227,22 +359,36 @@ begin
 end;
 
 procedure TViewAudioAppend.RenderTrackFile(aTrackFile: TTrackFile);
-var
-  NodeData: TNodeData;
-  VirtualNode: PVirtualNode;
 begin
-  NodeData.ID := aTrackFile.ID;
-  NodeData.FileName := aTrackFile.FileInfo.FileName;
-  NodeData.Path := aTrackFile.FileInfo.FullPath;
+  FTrackFileArr := FTrackFileArr + [aTrackFile];
 
-  VirtualNode := vstTrackFiles.AddChild(nil);
-  VirtualNode.SetData<TNodeData>(NodeData);
+  RenderArtist(aTrackFile.Artist);
+  RenderAlbum(aTrackFile.Artist, aTrackFile.Album);
+
+  DoRenderTrackFile(aTrackFile);
+end;
+
+procedure TViewAudioAppend.FormCreate(Sender: TObject);
+begin
+  inherited;
+
+  FBind := TORMBind.Create(Self);
+end;
+
+procedure TViewAudioAppend.FormDestroy(Sender: TObject);
+begin
+  inherited;
+
+  FBind.Free;
 end;
 
 procedure TViewAudioAppend.FormShow(Sender: TObject);
 begin
   inherited;
 
+  SetAllPagesInvisible;
+
+  FTrackFileArr := [];
   SendMessage('PullTrackFiles');
 end;
 

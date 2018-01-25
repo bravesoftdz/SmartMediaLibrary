@@ -20,7 +20,8 @@ uses
   eCommon in 'eCommon.pas',
   eAlbum in 'eAlbum.pas',
   eArtist in 'eArtist.pas',
-  eTrackFile in 'eTrackFile.pas';
+  eTrackFile in 'eTrackFile.pas',
+  API_ORM_VCLBind in '..\..\Libs\Delphi\API_ORM_VCLBind.pas';
 
 {$R *.res}
 
