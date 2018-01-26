@@ -43,6 +43,9 @@ type
   end;
 
   TTrackFile = record
+  private
+    function GetSubArr(aFileFormat: string): TArray<string>;
+  public
     Album: TAlbum;
     Artist: TArtist;
     Track: TTrack;
@@ -52,6 +55,7 @@ type
     ID: string;
     NewFileName: string;
     NewPath: string;
+    procedure SetNewFileName(aFileFormat: string);
   end;
 
   TTrackFileArrHelper = record helper for TArray<TTrackFile>
@@ -64,6 +68,53 @@ uses
   ID3v1Library,
   ID3v2Library,
   System.SysUtils;
+
+function TTrackFile.GetSubArr(aFileFormat: string): TArray<string>;
+var
+  CanRead: Boolean;
+  Chr: string;
+  i: Integer;
+  Sub: string;
+begin
+  Result := [];
+  Sub := '';
+  CanRead := False;
+
+  for i := 1 to Length(aFileFormat) do
+    begin
+      Chr := aFileFormat[i];
+
+      if Chr = '{' then
+        CanRead := True;
+
+      if Chr = '}' then
+        begin
+          Result := Result + [Sub];
+          Sub := '';
+          CanRead := False;
+        end;
+
+      if CanRead and
+         (Chr <> '{')
+      then
+        Sub := Sub + Chr;
+    end;
+end;
+
+procedure TTrackFile.SetNewFileName(aFileFormat: string);
+var
+  Sub: string;
+  SubArr: TArray<string>;
+begin
+  SubArr := GetSubArr(aFileFormat);
+
+  for Sub in SubArr do
+    begin
+      //if Sub = 'track.num' then
+      //  Album.
+
+    end;
+end;
 
 function TTrackFileArrHelper.FindByID(aID: string): TTrackFile;
 var

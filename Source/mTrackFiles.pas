@@ -19,6 +19,7 @@ type
     procedure ApplyTrackToArtistList(aArtistList: TArtistList; var aTrackFile: TTrackFile);
   public
     inDropedFiles: TArray<string>;
+    inFileFormat: string;
     outArtistList: TArtistList;
     outTrackFile: TTrackFile;
     procedure Start; override;
@@ -142,6 +143,8 @@ begin
       outTrackFile.ID3v2.LoadFromFile(FileInfo.FullPath);
 
       //поиск в инете
+
+      outTrackFile.SetNewFileName(inFileFormat);
 
       ApplyTrackToArtistList(outArtistList, outTrackFile);
 

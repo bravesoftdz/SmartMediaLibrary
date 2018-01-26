@@ -58,6 +58,7 @@ end;
 procedure TController.OnModelTrackFilesInit(aModel: TModelTrackFiles);
 begin
   aModel.inDropedFiles := ViewMain.DropedFiles;
+  aModel.inFileFormat := FILE_FORMAT;
 end;
 
 procedure TController.OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTrackFiles);
