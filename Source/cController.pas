@@ -16,16 +16,16 @@ type
     procedure AfterCreate; override;
   published
     procedure AddToLibrary;
-    procedure OnAfterTrackFileFill(const aMsg: string; aModel: TModelTrackFiles);
-    procedure OnModelTrackFilesInit(aModel: TModelTrackFiles);
-    procedure OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTrackFiles);
+    procedure OnAfterTrackFileFill(const aMsg: string; aModel: TModelDefineTrackFiles);
+    procedure OnModelDefineTrackFilesInit(aModel: TModelDefineTrackFiles);
+    procedure OnModelDefineTrackFilesEnd(const aMsg: string; aModel: TModelDefineTrackFiles);
     procedure PullTrackFiles;
   end;
 
 const
   AUDIO_PATH = 'D:\Music\';
-  FILE_FORMAT = '{track.num} - {track.title}';
-  PATH_FORMAT = '{artist.name}\{album.type}\{album.year} {album.title}';
+  FILE_FORMAT = '{TrackNum} - {TrackTitle}';
+  PATH_FORMAT = '{ArtistName}\{AlbumYear} {AlbumTitle}\';
 
 var
   DBEngine: TDBEngine;
@@ -41,7 +41,7 @@ uses
   vMain,
   Vcl.Controls;
 
-procedure TController.OnAfterTrackFileFill(const aMsg: string; aModel: TModelTrackFiles);
+procedure TController.OnAfterTrackFileFill(const aMsg: string; aModel: TModelDefineTrackFiles);
 begin
   TThread.Synchronize(nil, procedure()
     begin
@@ -55,13 +55,14 @@ begin
   cController.DBEngine := Self.DBEngine;
 end;
 
-procedure TController.OnModelTrackFilesInit(aModel: TModelTrackFiles);
+procedure TController.OnModelDefineTrackFilesInit(aModel: TModelDefineTrackFiles);
 begin
   aModel.inDropedFiles := ViewMain.DropedFiles;
   aModel.inFileFormat := FILE_FORMAT;
+  aModel.inPathFormat := AUDIO_PATH + PATH_FORMAT;
 end;
 
-procedure TController.OnModelTrackFilesEnd(const aMsg: string; aModel: TModelTrackFiles);
+procedure TController.OnModelDefineTrackFilesEnd(const aMsg: string; aModel: TModelDefineTrackFiles);
 begin
   TThread.Synchronize(nil, procedure()
     begin
@@ -72,7 +73,7 @@ end;
 
 procedure TController.PullTrackFiles;
 begin
-  CallModel<TModelTrackFiles>;
+  CallModel<TModelDefineTrackFiles>;
 end;
 
 procedure TController.AddToLibrary;

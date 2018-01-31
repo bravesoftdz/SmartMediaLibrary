@@ -93,8 +93,6 @@ type
     procedure RenderArtistDetail(aArtist: TArtist);
     procedure RenderTrackDetail(const aTrackFileID: string);
     procedure RenderTrackFileDetail(const aTrackFileID: string);
-    procedure SetAllPagesInvisible;
-    procedure SetPagesVisible(aPages: TArray<TTabSheet>);
   public
     { Public declarations }
     procedure RenderTrackFile(aTrackFile: TTrackFile);
@@ -114,24 +112,6 @@ var
 implementation
 
 {$R *.dfm}
-
-procedure TViewAudioAppend.SetPagesVisible(aPages: TArray<TTabSheet>);
-var
-  TabSheet: TTabSheet;
-begin
-  SetAllPagesInvisible;
-
-  for TabSheet in aPages do
-    TabSheet.TabVisible := True;
-end;
-
-procedure TViewAudioAppend.SetAllPagesInvisible;
-var
-  i: Integer;
-begin
-  for i := 0 to pgcPages.PageCount - 1 do
-    pgcPages.Pages[i].TabVisible := False;
-end;
 
 procedure TViewAudioAppend.RenderTrackDetail(const aTrackFileID: string);
 var
@@ -271,7 +251,6 @@ begin
         Artist := Sender.GetNodeData<TArtist>(Node);
 
         RenderArtistDetail(Artist);
-        SetPagesVisible([tsArtist]);
 
         for TrackFile in FTrackFileArr do
           if TrackFile.Artist = Artist then
@@ -282,7 +261,6 @@ begin
         Album := Sender.GetNodeData<TAlbum>(Node);
 
         RenderAlbumDetail(Album);
-        SetPagesVisible([tsAlbum]);
 
         for TrackFile in FTrackFileArr do
           if TrackFile.Album = Album then
@@ -330,7 +308,6 @@ begin
 
       RenderTrackDetail(NodeData.ID);
       RenderTrackFileDetail(NodeData.ID);
-      SetPagesVisible([tsTrack, tsFile, tsID3v1, tsID3v2]);
     end;
 end;
 
@@ -385,8 +362,6 @@ end;
 procedure TViewAudioAppend.FormShow(Sender: TObject);
 begin
   inherited;
-
-  SetAllPagesInvisible;
 
   FTrackFileArr := [];
   SendMessage('PullTrackFiles');

@@ -14,14 +14,18 @@ type
     FArtistID: Integer;
     FTitle: string;
     FTrackRels: TTrackRelList;
+    FYear: Integer;
+    function GetTrackNum(aTrack: TTrack): string;
     function GetTrackRels: TTrackRelList;
   public
     class function GetStructure: TSructure; override;
+    property TrackNum[aTrack: TTrack]: string read GetTrackNum;
     property TrackRels: TTrackRelList read GetTrackRels;
   published
     property AlbumTypeID: Integer read FAlbumTypeID write FAlbumTypeID;
     property ArtistID: Integer read FArtistID write FArtistID;
     property Title: string read FTitle write FTitle;
+    property Year: Integer read FYear write FYear;
   end;
 
   TAlbumList = class(TEntityList<TAlbum>)
@@ -34,6 +38,22 @@ implementation
 uses
   eArtist,
   System.SysUtils;
+
+function TAlbum.GetTrackNum(aTrack: TTrack): string;
+var
+  TrackRel: TTrackRel;
+begin
+  Result := '';
+
+  for TrackRel in TrackRels do
+    if TrackRel.Track = aTrack then
+      begin
+        Result := TrackRel.Order.ToString;
+        if Length(Result) = 1 then
+          Result := Format('0%s', [Result]);
+        Exit(Result);
+      end;
+end;
 
 function TAlbum.GetTrackRels: TTrackRelList;
 begin

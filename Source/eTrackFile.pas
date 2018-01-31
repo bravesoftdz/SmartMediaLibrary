@@ -45,6 +45,7 @@ type
   TTrackFile = record
   private
     function GetSubArr(aFileFormat: string): TArray<string>;
+    function ReplaceSub(aOldStr, aSub: string): string;
   public
     Album: TAlbum;
     Artist: TArtist;
@@ -56,6 +57,7 @@ type
     NewFileName: string;
     NewPath: string;
     procedure SetNewFileName(aFileFormat: string);
+    procedure SetNewPath(aPathFormat: string);
   end;
 
   TTrackFileArrHelper = record helper for TArray<TTrackFile>
@@ -68,6 +70,45 @@ uses
   ID3v1Library,
   ID3v2Library,
   System.SysUtils;
+
+function TTrackFile.ReplaceSub(aOldStr, aSub: string): string;
+var
+  NewSub: string;
+begin
+  if aSub = 'TrackNum' then
+    NewSub := Album.TrackNum[Track];
+
+  if aSub = 'TrackTitle' then
+    NewSub := Track.Title;
+
+  if aSub = 'ArtistName' then
+    NewSub := Artist.Title;
+
+  if aSub = 'AlbumType' then
+    NewSub := Album.AlbumTypeID.ToString;
+
+  if aSub = 'AlbumYear' then
+    NewSub := Album.Year.ToString;
+
+  if aSub = 'AlbumTitle' then
+    NewSub := Album.Title;
+
+  Result := aOldStr.Replace(Format('{%s}', [aSub]), NewSub);
+end;
+
+procedure TTrackFile.SetNewPath(aPathFormat: string);
+var
+  Sub: string;
+  SubArr: TArray<string>;
+begin
+  SubArr := GetSubArr(aPathFormat);
+  NewPath := aPathFormat;
+
+  for Sub in SubArr do
+    NewPath := ReplaceSub(NewPath, Sub);
+
+  NewPath := NewPath + NewFileName;
+end;
 
 function TTrackFile.GetSubArr(aFileFormat: string): TArray<string>;
 var
@@ -107,13 +148,12 @@ var
   SubArr: TArray<string>;
 begin
   SubArr := GetSubArr(aFileFormat);
+  NewFileName := aFileFormat;
 
   for Sub in SubArr do
-    begin
-      //if Sub = 'track.num' then
-      //  Album.
+    NewFileName := ReplaceSub(NewFileName, Sub);
 
-    end;
+  NewFileName := Format('%s.%s', [NewFileName, FileInfo.Extension]);
 end;
 
 function TTrackFileArrHelper.FindByID(aID: string): TTrackFile;
