@@ -91,7 +91,7 @@ procedure TController.InitDB(var aDBEngineClass: TDBEngineClass;
 begin
   aDBEngineClass := TMySQLEngine;
   aConnectOnCreate := True;
-  aConnectParams.GetFormFile('Settings\MySQL.ini');
+  aConnectParams.GetFromFile('Settings\MySQL.ini');
 end;
 
 end.

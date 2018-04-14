@@ -85,6 +85,10 @@ inherited ViewAudioAppend: TViewAudioAppend
     end
     object tsFile: TTabSheet
       Caption = 'File'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object leFileName: TLabeledEdit
         Left = 56
         Top = 24

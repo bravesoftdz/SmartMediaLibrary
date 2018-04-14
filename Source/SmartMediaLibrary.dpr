@@ -16,12 +16,11 @@ uses
   eTrack in 'eTrack.pas',
   mTrackFiles in 'mTrackFiles.pas',
   API_ORM in '..\..\Libs\Delphi\API_ORM.pas',
-  API_Crypt in '..\..\Libs\Delphi\API_Crypt.pas',
   eCommon in 'eCommon.pas',
   eAlbum in 'eAlbum.pas',
   eArtist in 'eArtist.pas',
   eTrackFile in 'eTrackFile.pas',
-  API_ORM_VCLBind in '..\..\Libs\Delphi\API_ORM_VCLBind.pas';
+  API_ORM_BindVCL in '..\..\Libs\Delphi\API_ORM_BindVCL.pas';
 
 {$R *.res}
 

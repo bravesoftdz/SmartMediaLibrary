@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, VirtualTrees, Vcl.Graphics,
   Vcl.ExtCtrls, Vcl.ComCtrls,
   API_MVC_VCL,
-  API_ORM_VCLBind,
+  API_ORM_BindVCL,
   eAlbum,
   eArtist,
   eTrack,
