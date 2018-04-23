@@ -22,6 +22,7 @@ type
 implementation
 
 uses
+  System.Hash,
   System.SysUtils;
 
 procedure TModelDefineFiles.DefineMP3File(var aMediaFile: TMediaFile);
@@ -46,6 +47,7 @@ begin
 
   for FileInfo in FileInfoArr do
     begin
+      outMediaFile.Hash := THashMD5.GetHashString(FileInfo.FullPath);
       outMediaFile.FileInfo := FileInfo;
 
       if FileInfo.Extension.ToUpper = 'MP3' then

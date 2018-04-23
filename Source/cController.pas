@@ -43,7 +43,7 @@ procedure TController.OnFileAdded(aModel: TModelDefineFiles);
 begin
   TThread.Synchronize(nil, procedure()
     begin
-      ViewAddingFiles.RenderFile(aModel.outMediaFile.FileInfo);
+      ViewAddingFiles.RenderMediaFile(aModel.outMediaFile);
     end
   );
 end;

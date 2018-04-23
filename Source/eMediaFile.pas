@@ -44,9 +44,14 @@ type
   TMediaFile = record
   public
     FileInfo: TFileInfo;
+    Hash: string;
     ID3v1: TID3v1;
     ID3v2: TID3v2;
     MediaType: TMediaType;
+  end;
+
+  TMediaFileArrHelper = record helper for TArray<TMediaFile>
+    function FindByHash(aHash: string): TMediaFile;
   end;
 
 implementation
@@ -55,6 +60,15 @@ uses
   ID3v1Library,
   ID3v2Library,
   System.SysUtils;
+
+function TMediaFileArrHelper.FindByHash(aHash: string): TMediaFile;
+var
+  MediaFile: TMediaFile;
+begin
+  for MediaFile in Self do
+    if MediaFile.Hash = aHash then
+      Exit(MediaFile);
+end;
 
 procedure TID3v2.LoadFromFile(const aPath: string);
 var
