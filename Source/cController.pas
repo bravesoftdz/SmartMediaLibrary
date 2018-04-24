@@ -29,14 +29,16 @@ implementation
 
 uses
   API_DB_SQLite,
+  eArtist,
   System.Classes,
   System.SysUtils,
   vAddingFiles,
+  Vcl.Controls,
   vMain;
 
 procedure TController.OnModelDefineFilesEnd(aModel: TModelDefineFiles);
 begin
-  aModel.outAudioList.Free;
+  FDataObj.AddOrSetValue('AudioList', aModel.outAudioList);
 end;
 
 procedure TController.OnFileAdded(aModel: TModelDefineFiles);
@@ -59,9 +61,23 @@ begin
 end;
 
 procedure TController.AddFiles;
+var
+  AudioList: TAudioList;
+  IsOK: Boolean;
 begin
   ViewAddingFiles := VCL.CreateView<TViewAddingFiles>;
-  ViewAddingFiles.ShowModal;
+
+  if ViewAddingFiles.ShowModal = mrOK then
+    IsOK := True
+  else
+    IsOK := False;
+
+  AudioList := FDataObj.Items['AudioList'] as TAudioList;
+
+  if IsOK then
+    AudioList.Store;
+
+  AudioList.Free;
 end;
 
 procedure TController.AfterCreate;

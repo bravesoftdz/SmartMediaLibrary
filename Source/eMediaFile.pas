@@ -3,10 +3,14 @@ unit eMediaFile;
 interface
 
 uses
-  API_Files;
+  API_Files,
+  eAlbum,
+  eArtist,
+  eTrack;
 
 type
-  TMediaType = (mtMP3, mtUnknown);
+  TMediaType = (mtUnknown, mtAudio, mtVideo);
+  TMediaFormat = (mfUnknown, mfMP3);
 
   TID3v1 = record
   public
@@ -43,11 +47,15 @@ type
 
   TMediaFile = record
   public
+    Album: TAlbum;
+    Artist: TArtist;
     FileInfo: TFileInfo;
     Hash: string;
     ID3v1: TID3v1;
     ID3v2: TID3v2;
+    MediaFormat: TMediaFormat;
     MediaType: TMediaType;
+    Track: TTrack;
   end;
 
   TMediaFileArrHelper = record helper for TArray<TMediaFile>

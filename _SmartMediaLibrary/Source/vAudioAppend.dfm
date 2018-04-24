@@ -23,16 +23,12 @@ inherited ViewAudioAppend: TViewAudioAppend
     Top = 0
     Width = 305
     Height = 411
-    ActivePage = tsFile
+    ActivePage = tsID3v2
     Align = alRight
     TabOrder = 0
     object tsArtist: TTabSheet
       Caption = 'Artist'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object bcArtistTitle: TLabeledEdit
         Left = 64
         Top = 24
@@ -48,10 +44,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     object tsAlbum: TTabSheet
       Caption = 'Album'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object bcAlbumTitle: TLabeledEdit
         Left = 56
         Top = 24
@@ -67,10 +59,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     object tsTrack: TTabSheet
       Caption = 'Track'
       ImageIndex = 5
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object bcTrackTitle: TLabeledEdit
         Left = 37
         Top = 32
@@ -85,10 +73,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     end
     object tsFile: TTabSheet
       Caption = 'File'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object leFileName: TLabeledEdit
         Left = 56
         Top = 24
@@ -141,10 +125,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     object tsID3v1: TTabSheet
       Caption = 'Tag ID3v1'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbxTagID3v1: TScrollBox
         Left = 0
         Top = 0
@@ -239,10 +219,6 @@ inherited ViewAudioAppend: TViewAudioAppend
     object tsID3v2: TTabSheet
       Caption = 'Tag ID3v2'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbxTagID3v2: TScrollBox
         Left = 0
         Top = 0

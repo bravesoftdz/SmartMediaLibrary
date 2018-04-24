@@ -17,7 +17,10 @@ uses
   mAddingFiles in 'mAddingFiles.pas',
   API_Files in '..\..\Libs\Delphi\API_Files.pas',
   eArtist in 'eArtist.pas',
-  eMediaFile in 'eMediaFile.pas';
+  eMediaFile in 'eMediaFile.pas',
+  API_VCL_UIExt in '..\..\Libs\Delphi\API_VCL_UIExt.pas',
+  eAlbum in 'eAlbum.pas',
+  eTrack in 'eTrack.pas';
 
 {$R *.res}
 
