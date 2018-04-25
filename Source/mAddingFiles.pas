@@ -19,8 +19,16 @@ type
       aAlbumVariants, aTrackVariants: TArray<string>);
   public
     inDropedFiles: TArray<string>;
+    inFileFormat: string;
+    inPathFormat: string;
     outAudioList: TAudioList;
     outMediaFile: TMediaFile;
+    procedure Start; override;
+  end;
+
+  TModelStoreFiles = class(TModelAbstract)
+  public
+    inMediaFileArr: TArray<TMediaFile>;
     procedure Start; override;
   end;
 
@@ -31,6 +39,21 @@ uses
   eTrack,
   System.Hash,
   System.SysUtils;
+
+procedure TModelStoreFiles.Start;
+var
+  DestPath: string;
+  MediaFile: TMediaFile;
+  SourcePath: string;
+begin
+  for MediaFile in inMediaFileArr do
+    begin
+      SourcePath := MediaFile.FileInfo.FullPath;
+      DestPath := MediaFile.Destination.FullPath;
+
+      TFilesEngine.Move(SourcePath, DestPath);
+    end;
+end;
 
 procedure TModelDefineFiles.ApplyToAudioLib(var aMediaFile: TMediaFile; const aArtistVariants,
   aAlbumVariants, aTrackVariants: TArray<string>);
@@ -59,7 +82,7 @@ begin
       TrackRel := TTrackRel.Create;
       TrackRel.Track := TTrack.Create;
       TrackRel.Track.Title := aTrackVariants[0];
-      TrackRel.Order := ;
+      TrackRel.Order := aMediaFile.TrackOrder;
 
       Album.TrackRels.Add(TrackRel);
 
@@ -104,6 +127,8 @@ begin
   aTrackVariants := [];
   AddVariant(aTrackVariants, aMediaFile.ID3v1.Title);
   AddVariant(aTrackVariants, aMediaFile.ID3v2.Title);
+
+  aMediaFile.TrackOrder := StrToIntDef(aMediaFile.ID3v1.Track, 0);
 end;
 
 procedure TModelDefineFiles.Start;
@@ -136,8 +161,11 @@ begin
         outMediaFile.MediaType := mtUnknown;
 
       case outMediaFile.MediaType of
-        mtAudio: ApplyToAudioLib(outMediaFile, ArtistVariants, AlbumVariants);
+        mtAudio: ApplyToAudioLib(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
       end;
+
+      outMediaFile.SetDestFileName(inFileFormat);
+      outMediaFile.SetDestPath(inPathFormat);
 
       SendMessage('OnFileAdded');
     end;

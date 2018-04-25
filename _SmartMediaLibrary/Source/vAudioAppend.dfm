@@ -23,7 +23,7 @@ inherited ViewAudioAppend: TViewAudioAppend
     Top = 0
     Width = 305
     Height = 411
-    ActivePage = tsID3v2
+    ActivePage = tsArtist
     Align = alRight
     TabOrder = 0
     object tsArtist: TTabSheet

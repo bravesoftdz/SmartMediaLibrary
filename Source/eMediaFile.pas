@@ -45,10 +45,20 @@ type
     procedure LoadFromFile(const aPath: string);
   end;
 
+  TDestination = record
+  public
+    FileName: string;
+    FullPath: string;
+  end;
+
   TMediaFile = record
+  private
+    function GetSubArr(aFileFormat: string): TArray<string>;
+    function ReplaceSub(aOldStr, aSub: string): string;
   public
     Album: TAlbum;
     Artist: TArtist;
+    Destination: TDestination;
     FileInfo: TFileInfo;
     Hash: string;
     ID3v1: TID3v1;
@@ -56,6 +66,9 @@ type
     MediaFormat: TMediaFormat;
     MediaType: TMediaType;
     Track: TTrack;
+    TrackOrder: Integer;
+    procedure SetDestFileName(const aFileFormat: string);
+    procedure SetDestPath(const aPathFormat: string);
   end;
 
   TMediaFileArrHelper = record helper for TArray<TMediaFile>
@@ -68,6 +81,93 @@ uses
   ID3v1Library,
   ID3v2Library,
   System.SysUtils;
+
+function TMediaFile.ReplaceSub(aOldStr, aSub: string): string;
+var
+  NewSub: string;
+begin
+  if aSub = 'TrackNum' then
+    NewSub := Album.TrackNum[Track];
+
+  if aSub = 'TrackTitle' then
+    NewSub := Track.Title;
+
+  if aSub = 'ArtistName' then
+    NewSub := Artist.Title;
+
+  //if aSub = 'AlbumType' then
+  //  NewSub := Album.AlbumTypeID.ToString;
+
+  //if aSub = 'AlbumYear' then
+  //  NewSub := Album.Year.ToString;
+
+  if aSub = 'AlbumTitle' then
+    NewSub := Album.Title;
+
+  Result := aOldStr.Replace(Format('{%s}', [aSub]), NewSub);
+end;
+
+function TMediaFile.GetSubArr(aFileFormat: string): TArray<string>;
+var
+  CanRead: Boolean;
+  Chr: string;
+  i: Integer;
+  Sub: string;
+begin
+  Result := [];
+  Sub := '';
+  CanRead := False;
+
+  for i := 1 to Length(aFileFormat) do
+    begin
+      Chr := aFileFormat[i];
+
+      if Chr = '{' then
+        CanRead := True;
+
+      if Chr = '}' then
+        begin
+          Result := Result + [Sub];
+          Sub := '';
+          CanRead := False;
+        end;
+
+      if CanRead and
+         (Chr <> '{')
+      then
+        Sub := Sub + Chr;
+    end;
+end;
+
+procedure TMediaFile.SetDestFileName(const aFileFormat: string);
+var
+  FileName: string;
+  Sub: string;
+  SubArr: TArray<string>;
+begin
+  SubArr := GetSubArr(aFileFormat);
+  FileName := aFileFormat;
+
+  for Sub in SubArr do
+    FileName := ReplaceSub(FileName, Sub);
+
+  Destination.FileName := Format('%s.%s', [FileName, FileInfo.Extension]);
+end;
+
+procedure TMediaFile.SetDestPath(const aPathFormat: string);
+var
+  Path: string;
+  Sub: string;
+  SubArr: TArray<string>;
+begin
+  SubArr := GetSubArr(aPathFormat);
+  Path := aPathFormat;
+
+  for Sub in SubArr do
+    Path := ReplaceSub(Path, Sub);
+
+  Destination.FullPath := Path + Destination.FileName;
+end;
 
 function TMediaFileArrHelper.FindByHash(aHash: string): TMediaFile;
 var

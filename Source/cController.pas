@@ -5,22 +5,32 @@ interface
 uses
   API_DB,
   API_MVC_VCLDB,
+  eArtist,
   mAddingFiles;
 
 type
   TController = class(TControllerVCLDB)
   private
+    function GetAudioList: TAudioList;
     procedure InitDB(var aDBEngineClass: TDBEngineClass; out aConnectParams: TConnectParams;
       out aConnectOnCreate: Boolean); override;
   protected
     procedure AfterCreate; override;
+    property AudioList: TAudioList read GetAudioList;
   published
     procedure AddFiles;
     procedure OnFileAdded(aModel: TModelDefineFiles);
     procedure OnModelDefineFilesInit(aModel: TModelDefineFiles);
     procedure OnModelDefineFilesEnd(aModel: TModelDefineFiles);
+    procedure OnModelStoreFilesInit(aModel: TModelStoreFiles);
     procedure PullFiles;
   end;
+
+const
+  AUDIO_PATH = 'D:\Music\';
+  FILE_FORMAT = '{TrackNum} - {TrackTitle}';
+  PATH_FORMAT = '{ArtistName}\{AlbumTitle}\';
+  //PATH_FORMAT = '{ArtistName}\{AlbumYear} {AlbumTitle}\';
 
 var
   DBEngine: TDBEngine;
@@ -29,12 +39,21 @@ implementation
 
 uses
   API_DB_SQLite,
-  eArtist,
   System.Classes,
   System.SysUtils,
   vAddingFiles,
   Vcl.Controls,
   vMain;
+
+procedure TController.OnModelStoreFilesInit(aModel: TModelStoreFiles);
+begin
+  aModel.inMediaFileArr := ViewAddingFiles.MediaFileArr;
+end;
+
+function TController.GetAudioList: TAudioList;
+begin
+  Result := FDataObj.Items['AudioList'] as TAudioList;
+end;
 
 procedure TController.OnModelDefineFilesEnd(aModel: TModelDefineFiles);
 begin
@@ -53,6 +72,8 @@ end;
 procedure TController.OnModelDefineFilesInit(aModel: TModelDefineFiles);
 begin
   aModel.inDropedFiles := ViewMain.DropedFiles;
+  aModel.inFileFormat := FILE_FORMAT;
+  aModel.inPathFormat := AUDIO_PATH + PATH_FORMAT;
 end;
 
 procedure TController.PullFiles;
@@ -62,7 +83,6 @@ end;
 
 procedure TController.AddFiles;
 var
-  AudioList: TAudioList;
   IsOK: Boolean;
 begin
   ViewAddingFiles := VCL.CreateView<TViewAddingFiles>;
@@ -72,10 +92,11 @@ begin
   else
     IsOK := False;
 
-  AudioList := FDataObj.Items['AudioList'] as TAudioList;
-
   if IsOK then
-    AudioList.Store;
+    begin
+      CallModel<TModelStoreFiles>;
+      AudioList.Store;
+    end;
 
   AudioList.Free;
 end;

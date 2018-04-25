@@ -20,7 +20,8 @@ uses
   eMediaFile in 'eMediaFile.pas',
   API_VCL_UIExt in '..\..\Libs\Delphi\API_VCL_UIExt.pas',
   eAlbum in 'eAlbum.pas',
-  eTrack in 'eTrack.pas';
+  eTrack in 'eTrack.pas',
+  API_ORM_BindVCL in '..\..\Libs\Delphi\API_ORM_BindVCL.pas';
 
 {$R *.res}
 
