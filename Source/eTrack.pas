@@ -33,7 +33,7 @@ type
 
   TTrackRelList = class(TEntityList<TTrackRel>)
   public
-    function GetTrackByName(aTrackName: string): TTrack;
+    function GetTrackByName(aTrackName: string): TTrackRel;
   end;
 
 implementation
@@ -42,7 +42,7 @@ uses
   eAlbum,
   System.SysUtils;
 
-function TTrackRelList.GetTrackByName(aTrackName: string): TTrack;
+function TTrackRelList.GetTrackByName(aTrackName: string): TTrackRel;
 var
   TrackRel: TTrackRel;
 begin
@@ -50,7 +50,7 @@ begin
 
   for TrackRel in Self do
     if UpperCase(TrackRel.Track.Title) = UpperCase(aTrackName) then
-      Exit(TrackRel.Track);
+      Exit(TrackRel);
 end;
 
 class function TTrackRel.GetStructure: TSructure;

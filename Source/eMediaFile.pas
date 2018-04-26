@@ -10,7 +10,21 @@ uses
 
 type
   TMediaType = (mtUnknown, mtAudio, mtVideo);
-  TMediaFormat = (mfUnknown, mfMP3);
+  TMediaFormat = (mfUnknown, mfMP3, mfWMA);
+
+  TWMA = record
+  public
+    Album: string;
+    AlbumArtist: string;
+    Artist: string;
+    Comment: string;
+    Genre: string;
+    Title: string;
+    Track: string;
+    Year: Integer;
+    procedure LoadFromFile(const aPath: string);
+    procedure SaveToFile(const aPath: string);
+  end;
 
   TID3v1 = record
   public
@@ -22,6 +36,7 @@ type
     Track: string;
     Year: Integer;
     procedure LoadFromFile(const aPath: string);
+    procedure SaveToFile(const aPath: string);
   end;
 
   TID3v2 = record
@@ -43,6 +58,7 @@ type
     URL: string;
     Year: Integer;
     procedure LoadFromFile(const aPath: string);
+    procedure SaveToFile(const aPath: string);
   end;
 
   TDestination = record
@@ -51,6 +67,7 @@ type
     FullPath: string;
   end;
 
+  PMediaFile = ^TMediaFile;
   TMediaFile = record
   private
     function GetSubArr(aFileFormat: string): TArray<string>;
@@ -65,14 +82,16 @@ type
     ID3v2: TID3v2;
     MediaFormat: TMediaFormat;
     MediaType: TMediaType;
-    Track: TTrack;
+    TrackRel: TTrackRel;
     TrackOrder: Integer;
+    WMA: TWMA;
+    Year: Integer;
     procedure SetDestFileName(const aFileFormat: string);
     procedure SetDestPath(const aPathFormat: string);
   end;
 
   TMediaFileArrHelper = record helper for TArray<TMediaFile>
-    function FindByHash(aHash: string): TMediaFile;
+    function FindByHash(aHash: string): PMediaFile;
   end;
 
 implementation
@@ -80,17 +99,113 @@ implementation
 uses
   ID3v1Library,
   ID3v2Library,
-  System.SysUtils;
+  System.IOUtils,
+  System.SysUtils,
+  WMATagLibrary;
+
+procedure TWMA.SaveToFile(const aPath: string);
+var
+  WMATag: TWMATag;
+begin
+  WMATag := TWMATag.Create;
+  try
+    WMATag.SetTextFrameText(g_wszWMTrackNumber, Self.Track);
+    WMATag.SetTextFrameText(g_wszWMAlbumTitle, Self.Album);
+    WMATag.SetTextFrameText(g_wszWMAuthor, Self.Artist);
+    WMATag.SetTextFrameText(g_wszWMAlbumArtist, Self.AlbumArtist);
+    WMATag.SetTextFrameText(g_wszWMTitle, Self.Title);
+    WMATag.SetTextFrameText(g_wszWMYear, Self.Year.ToString);
+    WMATag.SetTextFrameText(g_wszWMGenre, Self.Genre);
+    WMATag.SetTextFrameText(g_wszWMDescription, Self.Comment);
+
+    WMATag.SaveToFile(aPath);
+  finally
+    WMATag.Free;
+  end;
+end;
+
+procedure TWMA.LoadFromFile(const aPath: string);
+var
+  WMATag: TWMATag;
+begin
+  WMATag := TWMATag.Create;
+  try
+    WMATag.LoadFromFile(aPath);
+
+    Self.Track := WMATag.ReadFrameByNameAsText(g_wszWMTrackNumber);
+    Self.Album := WMATag.ReadFrameByNameAsText(g_wszWMAlbumTitle);
+    Self.Artist := WMATag.ReadFrameByNameAsText(g_wszWMAuthor);
+    Self.AlbumArtist := WMATag.ReadFrameByNameAsText(g_wszWMAlbumArtist);
+    Self.Title := WMATag.ReadFrameByNameAsText(g_wszWMTitle);
+    Self.Year := StrToIntDef(WMATag.ReadFrameByNameAsText(g_wszWMYear), 0);
+    Self.Genre := WMATag.ReadFrameByNameAsText(g_wszWMGenre);
+    Self.Comment := WMATag.ReadFrameByNameAsText(g_wszWMDescription);
+  finally
+    WMATag.Free;
+  end;
+end;
+
+procedure TID3v2.SaveToFile(const aPath: string);
+var
+  ID3v2Tag: TID3v2Tag;
+  LanguageID: TLanguageID;
+begin
+  ID3v2Tag := TID3v2Tag.Create;
+  try
+    ID3v2Tag.SetUnicodeText('TRCK', Self.Track);
+    ID3v2Tag.SetUnicodeText('MCDI', Self.Disc);
+    ID3v2Tag.SetUnicodeText('TIT2', Self.Title);
+    ID3v2Tag.SetUnicodeText('TPE1', Self.Artist);
+    ID3v2Tag.SetUnicodeText('TALB', Self.Album);
+    ID3v2Tag.SetUnicodeText('TYER', Self.Year.ToString);
+    ID3v2Tag.SetUnicodeText('TCON', Self.Genre);
+
+    StringToLanguageID(Self.Comment, LanguageID);
+    ID3v2Tag.SetUnicodeComment('COMM', Self.Comment, LanguageID, '');
+
+    ID3v2Tag.SetUnicodeText('TCOM', Self.Composer);
+    ID3v2Tag.SetUnicodeText('TPUB', Self.Publisher);
+    ID3v2Tag.SetUnicodeText('TOPE', Self.OrigArtist);
+    ID3v2Tag.SetUnicodeText('WCOP', Self.Copyright);
+    ID3v2Tag.SetUnicodeText('WXXX', Self.URL);
+    ID3v2Tag.SetUnicodeText('TENC', Self.Encoded);
+    ID3v2Tag.SetUnicodeText('TBPM', Self.BPM);
+
+    ID3v2Tag.SaveToFile(aPath);
+  finally
+    ID3v2Tag.Free;
+  end;
+end;
+
+procedure TID3v1.SaveToFile(const aPath: string);
+var
+  ID3v1Tag: TID3v1Tag;
+begin
+  ID3v1Tag := TID3v1Tag.Create;
+  try
+    ID3v1Tag.Track := Self.Track.ToInteger;
+    ID3v1Tag.Album := Self.Album;
+    ID3v1Tag.Artist := Self.Artist;
+    ID3v1Tag.Title := Self.Title;
+    ID3v1Tag.Year := Self.Year.ToString;
+    ID3v1Tag.Genre := Self.Genre;
+    ID3v1Tag.Comment := Self.Comment;
+
+    ID3v1Tag.SaveToFile(aPath);
+  finally
+    ID3v1Tag.Free;
+  end;
+end;
 
 function TMediaFile.ReplaceSub(aOldStr, aSub: string): string;
 var
   NewSub: string;
 begin
   if aSub = 'TrackNum' then
-    NewSub := Album.TrackNum[Track];
+    NewSub := Album.TrackNum[TrackRel.Track];
 
   if aSub = 'TrackTitle' then
-    NewSub := Track.Title;
+    NewSub := TrackRel.Track.Title;
 
   if aSub = 'ArtistName' then
     NewSub := Artist.Title;
@@ -98,8 +213,8 @@ begin
   //if aSub = 'AlbumType' then
   //  NewSub := Album.AlbumTypeID.ToString;
 
-  //if aSub = 'AlbumYear' then
-  //  NewSub := Album.Year.ToString;
+  if aSub = 'AlbumYear' then
+    NewSub := Album.Year.ToString;
 
   if aSub = 'AlbumTitle' then
     NewSub := Album.Title;
@@ -142,6 +257,7 @@ end;
 procedure TMediaFile.SetDestFileName(const aFileFormat: string);
 var
   FileName: string;
+  InvalidChar: Char;
   Sub: string;
   SubArr: TArray<string>;
 begin
@@ -150,6 +266,10 @@ begin
 
   for Sub in SubArr do
     FileName := ReplaceSub(FileName, Sub);
+
+  for InvalidChar in TPath.GetInvalidFileNameChars do
+    if FileName.IndexOf(InvalidChar) > 0 then
+      FileName := FileName.Replace(InvalidChar, '');
 
   Destination.FileName := Format('%s.%s', [FileName, FileInfo.Extension]);
 end;
@@ -169,13 +289,18 @@ begin
   Destination.FullPath := Path + Destination.FileName;
 end;
 
-function TMediaFileArrHelper.FindByHash(aHash: string): TMediaFile;
+function TMediaFileArrHelper.FindByHash(aHash: string): PMediaFile;
 var
+  i: Integer;
   MediaFile: TMediaFile;
 begin
+  i := 0;
   for MediaFile in Self do
-    if MediaFile.Hash = aHash then
-      Exit(MediaFile);
+    begin
+      if MediaFile.Hash = aHash then
+        Exit(@Self[i]);
+      Inc(i);
+    end;
 end;
 
 procedure TID3v2.LoadFromFile(const aPath: string);

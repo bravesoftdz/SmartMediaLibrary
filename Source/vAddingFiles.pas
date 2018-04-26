@@ -72,6 +72,17 @@ type
     bcAlbumTitle: TLabeledEdit;
     tsTrack: TTabSheet;
     bcTrackTitle: TLabeledEdit;
+    bcAlbumYear: TLabeledEdit;
+    bcTrackOrder: TLabeledEdit;
+    tsWMATag: TTabSheet;
+    leWMATrack: TLabeledEdit;
+    leWMAGenre: TLabeledEdit;
+    leWMAComment: TLabeledEdit;
+    leWMAYear: TLabeledEdit;
+    leWMAAlbum: TLabeledEdit;
+    leWMAArtist: TLabeledEdit;
+    leWMATitle: TLabeledEdit;
+    leWMAAlbumArtist: TLabeledEdit;
     procedure FormShow(Sender: TObject);
     procedure vstFilesGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
@@ -86,21 +97,23 @@ type
     procedure vstLibraryFocusChanged(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex);
     procedure vstFilesEnter(Sender: TObject);
+    procedure leWMAGenreChange(Sender: TObject);
   private
     { Private declarations }
     FBind: TORMBind;
     FMediaFileArr: TArray<TMediaFile>;
+    function GetActiveMediaFile: PMediaFile;
     procedure RenderAlbumDetail(aAlbum: TAlbum);
     procedure RenderAlbumTree(aArtist: TArtist; aAlbum: TAlbum);
     procedure RenderArtistDetail(aArtist: TArtist);
     procedure RenderArtistTree(aArtist: TArtist);
     procedure RenderMediaFileDetail(const aMediaFile: TMediaFile);
     procedure RenderMediaFileGrid(const aMediaFile: TMediaFile);
-    procedure RenderTrackDetail(aTrack: TTrack);
+    procedure RenderTrackDetail(aTrackRel: TTrackRel);
     procedure ShowPages(aTabSheetArr: TArray<TTabSheet>);
   public
     { Public declarations }
-    procedure RenderMediaFile(const aMediaFile: TMediaFile);
+    procedure RenderMediaFile(var aMediaFile: TMediaFile);
     property MediaFileArr: TArray<TMediaFile> read FMediaFileArr;
   end;
 
@@ -113,6 +126,25 @@ implementation
 
 uses
   API_VCL_UIExt;
+
+function TViewAddingFiles.GetActiveMediaFile: PMediaFile;
+var
+  FileNode: TFileNode;
+begin
+  if vstFiles.FocusedNode <> nil then
+    begin
+      FileNode := vstFiles.GetNodeData<TFileNode>(vstFiles.FocusedNode);
+      Result := FMediaFileArr.FindByHash(FileNode.Hash);
+    end;
+end;
+
+procedure TViewAddingFiles.leWMAGenreChange(Sender: TObject);
+begin
+  inherited;
+
+  if leWMAGenre.Modified then
+    GetActiveMediaFile^.WMA.Genre := leWMAGenre.Text;
+end;
 
 procedure TViewAddingFiles.ShowPages(aTabSheetArr: TArray<TTabSheet>);
 var
@@ -161,9 +193,10 @@ begin
   FBind.BindEntity(aArtist, 'Artist');
 end;
 
-procedure TViewAddingFiles.RenderTrackDetail(aTrack: TTrack);
+procedure TViewAddingFiles.RenderTrackDetail(aTrackRel: TTrackRel);
 begin
-  FBind.BindEntity(aTrack, 'Track');
+  FBind.BindEntity(aTrackRel, 'Track');
+  FBind.BindEntity(aTrackRel.Track, 'Track');
 end;
 
 procedure TViewAddingFiles.RenderAlbumTree(aArtist: TArtist; aAlbum: TAlbum);
@@ -226,15 +259,27 @@ begin
   leT2URL.Text := aMediaFile.ID3v2.URL;
   leT2Encoded.Text := aMediaFile.ID3v2.Encoded;
   leT2BPM.Text := aMediaFile.ID3v2.BPM;
+
+  leWMATrack.Text := aMediaFile.WMA.Track;
+  leWMATitle.Text := aMediaFile.WMA.Title;
+  leWMAArtist.Text := aMediaFile.WMA.Artist;
+  leWMAAlbum.Text := aMediaFile.WMA.Album;
+  leWMAYear.Text := aMediaFile.WMA.Year.ToString;
+  leWMAGenre.Text := aMediaFile.WMA.Genre;
+  leWMAComment.Text := aMediaFile.WMA.Comment;
+  leWMAAlbumArtist.Text := aMediaFile.WMA.AlbumArtist;
 end;
 
-procedure TViewAddingFiles.RenderMediaFile(const aMediaFile: TMediaFile);
+procedure TViewAddingFiles.RenderMediaFile(var aMediaFile: TMediaFile);
 begin
   FMediaFileArr := FMediaFileArr + [aMediaFile];
   RenderMediaFileGrid(aMediaFile);
 
-  RenderArtistTree(aMediaFile.Artist);
-  RenderAlbumTree(aMediaFile.Artist, aMediaFile.Album);
+  if aMediaFile.Artist <> nil then
+    RenderArtistTree(aMediaFile.Artist);
+
+  if aMediaFile.Album <> nil then
+    RenderAlbumTree(aMediaFile.Artist, aMediaFile.Album);
 end;
 
 procedure TViewAddingFiles.vstFilesEnter(Sender: TObject);
@@ -247,25 +292,28 @@ end;
 procedure TViewAddingFiles.vstFilesFocusChanged(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
 var
-  FileNode: TFileNode;
-  MediaFile: TMediaFile;
-  Track: TTrack;
+  MediaFile: PMediaFile;
+  TrackRel: TTrackRel;
 begin
   inherited;
 
   if Sender.FocusedNode <> nil then
     begin
-      FileNode := Sender.GetNodeData<TFileNode>(Sender.FocusedNode);
-      MediaFile := FMediaFileArr.FindByHash(FileNode.Hash);
+      MediaFile := GetActiveMediaFile;
 
       if MediaFile.MediaFormat = mfMP3 then
-        ShowPages([tsFile, tsArtist, tsAlbum, tsTrack, tsTagID3v1, tsTagID3v2, tsCover]);
+        ShowPages([tsFile, tsArtist, tsAlbum, tsTrack, tsTagID3v1, tsTagID3v2, tsCover])
+      else
+      if MediaFile.MediaFormat = mfWMA then
+        ShowPages([tsFile, tsArtist, tsAlbum, tsTrack, tsWMATag, tsCover])
+      else
+        ShowPages([]);
 
+      RenderMediaFileDetail(MediaFile^);
 
-      RenderMediaFileDetail(MediaFile);
-
-      Track := MediaFile.Track;
-      RenderTrackDetail(Track);
+      TrackRel := MediaFile.TrackRel;
+      if TrackRel <> nil then
+        RenderTrackDetail(TrackRel);
     end;
 end;
 
@@ -386,6 +434,7 @@ begin
   tsTrack.TabVisible := False;
   tsTagID3v1.TabVisible := False;
   tsTagID3v2.TabVisible := False;
+  tsWMATag.TabVisible := False;
   tsCover.TabVisible := False;
 
   SendMessage('PullFiles');

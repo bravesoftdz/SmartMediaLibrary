@@ -13,6 +13,7 @@ type
     FArtistID: Integer;
     FTitle: string;
     FTrackRels: TTrackRelList;
+    FYear: Integer;
     function GetTrackNum(aTrack: TTrack): string;
     function GetTrackRels: TTrackRelList;
   public
@@ -22,6 +23,7 @@ type
   published
     property ArtistID: Integer read FArtistID write FArtistID;
     property Title: string read FTitle write FTitle;
+    property Year: Integer read FYear write FYear;
   end;
 
   TAlbumList = class(TEntityList<TAlbum>)

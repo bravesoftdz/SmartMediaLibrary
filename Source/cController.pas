@@ -29,8 +29,7 @@ type
 const
   AUDIO_PATH = 'D:\Music\';
   FILE_FORMAT = '{TrackNum} - {TrackTitle}';
-  PATH_FORMAT = '{ArtistName}\{AlbumTitle}\';
-  //PATH_FORMAT = '{ArtistName}\{AlbumYear} {AlbumTitle}\';
+  PATH_FORMAT = '{ArtistName}\{AlbumYear} {AlbumTitle}\';
 
 var
   DBEngine: TDBEngine;
