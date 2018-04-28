@@ -98,12 +98,11 @@ procedure TModelDefineFiles.ReadFileData(var aMediaFile: TMediaFile; var aArtist
 var
   TrackOrder: string;
 begin
-  if aMediaFile.TrackOrder = 0 then
-    begin
-      TrackOrder := TStrTool.GetRegExFirstMatch(aMediaFile.FileInfo.Name, '\d{1,2}');
-      if not TrackOrder.IsEmpty then
-        aMediaFile.TrackOrder := TrackOrder.ToInteger;
-    end;
+  TrackOrder := TStrTool.GetRegExFirstMatch(aMediaFile.FileInfo.Name, '\d{1,2}');
+  if not TrackOrder.IsEmpty and
+     (TrackOrder <> aMediaFile.TrackOrder.ToString)
+  then
+    aMediaFile.TrackOrder := TrackOrder.ToInteger;
 end;
 
 procedure TModelStoreFiles.Start;
@@ -126,6 +125,11 @@ begin
         mfMP3: begin
                  MediaFile.ID3v1.SaveToFile(DestPath);
                  MediaFile.ID3v2.SaveToFile(DestPath);
+                 if not MediaFile.NewCoverPicture.IsEmpty then
+                   begin
+                     // will replace to dynamic ID3v2 Tag update
+                     MediaFile.ID3v2.SetCoverPictureFromFile(MediaFile.NewCoverPicture);
+                   end;
                end;
         mfWMA: MediaFile.WMA.SaveToFile(DestPath);
       end;
@@ -192,16 +196,16 @@ begin
   aMediaFile.ID3v2.LoadFromFile(aMediaFile.FileInfo.FullPath);
 
   aArtistVariants := [];
-  AddVariant(aArtistVariants, aMediaFile.ID3v1.Artist);
   AddVariant(aArtistVariants, aMediaFile.ID3v2.Artist);
+  AddVariant(aArtistVariants, aMediaFile.ID3v1.Artist);
 
   aAlbumVariants := [];
-  AddVariant(aAlbumVariants, aMediaFile.ID3v1.Album);
   AddVariant(aAlbumVariants, aMediaFile.ID3v2.Album);
+  AddVariant(aAlbumVariants, aMediaFile.ID3v1.Album);
 
   aTrackVariants := [];
-  AddVariant(aTrackVariants, aMediaFile.ID3v1.Title);
   AddVariant(aTrackVariants, aMediaFile.ID3v2.Title);
+  AddVariant(aTrackVariants, aMediaFile.ID3v1.Title);
 
   aMediaFile.TrackOrder := StrToIntDef(aMediaFile.ID3v1.Track, 0);
   aMediaFile.Year := aMediaFile.ID3v1.Year;
@@ -232,6 +236,7 @@ begin
       outMediaFile.TrackRel := nil;
       outMediaFile.TrackOrder := 0;
       outMediaFile.Year := 0;
+      outMediaFile.NewCoverPicture := '';
 
       // Read Data
       if FileInfo.Extension.ToUpper = 'MP3' then

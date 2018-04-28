@@ -6,7 +6,8 @@ uses
   API_Files,
   eAlbum,
   eArtist,
-  eTrack;
+  eTrack,
+  System.Classes;
 
 type
   TMediaType = (mtUnknown, mtAudio, mtVideo);
@@ -40,6 +41,8 @@ type
   end;
 
   TID3v2 = record
+  private
+    FFileName: string;
   public
     Album: string;
     AlbumArtist: string;
@@ -57,8 +60,10 @@ type
     Track: string;
     URL: string;
     Year: Integer;
+    function GetCoverPictureStream(out aMIMEType: string): TStream;
     procedure LoadFromFile(const aPath: string);
     procedure SaveToFile(const aPath: string);
+    procedure SetCoverPictureFromFile(const aPath: string);
   end;
 
   TDestination = record
@@ -82,6 +87,7 @@ type
     ID3v2: TID3v2;
     MediaFormat: TMediaFormat;
     MediaType: TMediaType;
+    NewCoverPicture: string;
     TrackRel: TTrackRel;
     TrackOrder: Integer;
     WMA: TWMA;
@@ -94,6 +100,8 @@ type
     function FindByHash(aHash: string): PMediaFile;
   end;
 
+  function GetMIMEType(const aPath: string): string;
+
 implementation
 
 uses
@@ -102,6 +110,87 @@ uses
   System.IOUtils,
   System.SysUtils,
   WMATagLibrary;
+
+function GetMIMEType(const aPath: string): string;
+var
+  Ext: string;
+begin
+  Result := '';
+
+  Ext := UpperCase(ExtractFileExt(aPath));
+
+  if (Ext = '.JPG') or
+     (Ext = '.JPEG')
+  then
+    Result := 'image/jpeg'
+  else
+  if (Ext = '.PNG') then
+    Result := 'image/png'
+  else
+  if (Ext = '.BMP') then
+    Result := 'image/bmp'
+  else
+  if (Ext = '.GIF') then
+    Result := 'image/gif';
+end;
+
+function TID3v2.GetCoverPictureStream(out aMIMEType: string): TStream;
+var
+  Description: string;
+  ID3v2Tag: TID3v2Tag;
+  Index: Integer;
+  PictureType: Integer;
+  Success: Boolean;
+begin
+  Result := TMemoryStream.Create;
+  ID3v2Tag := TID3v2Tag.Create;
+  try
+    ID3v2Tag.LoadFromFile(FFileName);
+
+    Index := ID3v2Tag.FrameExists('APIC');
+    if Index < 0 then
+      begin
+        FreeAndNil(Result);
+        Exit;
+      end;
+
+    Success := ID3v2Tag.GetUnicodeCoverPictureStream(Index, Result, aMIMEType, Description, PictureType);
+    aMIMEType := aMIMEType.ToLower;
+
+    if not Success then
+      begin
+        FreeAndNil(Result);
+        Exit;
+      end;
+  finally
+    ID3v2Tag.Free;
+  end;
+end;
+
+procedure TID3v2.SetCoverPictureFromFile(const aPath: string);
+var
+  FrameIndex: Integer;
+  ID3v2Tag: TID3v2Tag;
+  MIMEType: string;
+  PictureType: Integer;
+begin
+  MIMEType := GetMIMEType(aPath);
+
+  if MIMEType <> '' then
+    begin
+      ID3v2Tag := TID3v2Tag.Create;
+      try
+        ID3v2Tag.LoadFromFile(FFileName);
+
+        FrameIndex := ID3v2Tag.AddFrame('APIC');
+        PictureType := $03;
+        ID3v2Tag.SetUnicodeCoverPictureFromFile(FrameIndex, '', aPath, MIMEType, PictureType);
+        ID3v2Tag.SaveToFile(FFileName);
+      finally
+        ID3v2Tag.Free;
+      end;
+    end;
+end;
 
 procedure TWMA.SaveToFile(const aPath: string);
 var
@@ -172,6 +261,7 @@ begin
     ID3v2Tag.SetUnicodeText('TBPM', Self.BPM);
 
     ID3v2Tag.SaveToFile(aPath);
+    FFileName := aPath;
   finally
     ID3v2Tag.Free;
   end;
@@ -310,6 +400,7 @@ begin
   ID3v2Tag := TID3v2Tag.Create;
   try
     ID3v2Tag.LoadFromFile(aPath);
+    FFileName := aPath;
 
     Self.Track := ID3v2Tag.GetUnicodeText('TRCK');
     Self.Disc := ID3v2Tag.GetUnicodeText('MCDI');

@@ -11,7 +11,7 @@ uses
   eAlbum,
   eArtist,
   eMediaFile,
-  eTrack;
+  eTrack, Vcl.ExtDlgs;
 
 type
   TFileNode = record
@@ -83,6 +83,13 @@ type
     leWMAArtist: TLabeledEdit;
     leWMATitle: TLabeledEdit;
     leWMAAlbumArtist: TLabeledEdit;
+    pnlCover: TPanel;
+    imgCover: TImage;
+    btnAddCover: TButton;
+    Button11: TButton;
+    Button10: TButton;
+    dpgCoverPicture: TOpenPictureDialog;
+    lblCoverSize: TLabel;
     procedure FormShow(Sender: TObject);
     procedure vstFilesGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
@@ -98,11 +105,14 @@ type
       Node: PVirtualNode; Column: TColumnIndex);
     procedure vstFilesEnter(Sender: TObject);
     procedure leWMAGenreChange(Sender: TObject);
+    procedure btnAddCoverClick(Sender: TObject);
   private
     { Private declarations }
     FBind: TORMBind;
     FMediaFileArr: TArray<TMediaFile>;
     function GetActiveMediaFile: PMediaFile;
+    function LoadCoverPictureFromFile(const aPath: string): Boolean;
+    function LoadCoverPictureFromStream(aCoverPictureStream: TStream; const aMIMEType: string): Boolean;
     procedure RenderAlbumDetail(aAlbum: TAlbum);
     procedure RenderAlbumTree(aArtist: TArtist; aAlbum: TAlbum);
     procedure RenderArtistDetail(aArtist: TArtist);
@@ -125,7 +135,71 @@ implementation
 {$R *.dfm}
 
 uses
-  API_VCL_UIExt;
+  API_VCL_UIExt,
+  Vcl.Imaging.jpeg,
+  Vcl.Imaging.pngimage;
+
+function TViewAddingFiles.LoadCoverPictureFromFile(const aPath: string): Boolean;
+var
+  FileStream: TFileStream;
+  MIMEType: string;
+begin
+  FileStream := TFilesEngine.GetFileStream(aPath);
+  try
+    MIMEType := GetMIMEType(aPath);
+
+    if MIMEType <> '' then
+      Result := LoadCoverPictureFromStream(FileStream, MIMEType);
+  finally
+    FileStream.Free;
+  end;
+end;
+
+function TViewAddingFiles.LoadCoverPictureFromStream(aCoverPictureStream: TStream; const aMIMEType: string): Boolean;
+var
+  JPEGPicture: TJPEGImage;
+  PNGPicture: TPNGImage;
+begin
+  Result := True;
+  try
+    //If JPG
+    if (aMIMEType = 'image/jpeg') or
+       (aMIMEType = 'image/jpg')
+    then
+      begin
+        JPEGPicture := TJPEGImage.Create;
+        try
+          JPEGPicture.LoadFromStream(aCoverPictureStream);
+          JPEGPicture.DIBNeeded;
+          imgCover.Picture.Assign(JPEGPicture);
+
+          lblCoverSize.Caption := Format('Size: %d x %d', [JPEGPicture.Width, JPEGPicture.Height]);
+          lblCoverSize.Visible := True;
+        finally
+          JPEGPicture.Free;
+        end;
+      end;
+    // If PNG
+    if aMIMEType = 'image/png' then
+      begin
+        PNGPicture := TPNGImage.Create;
+        try
+          PNGPicture.LoadFromStream(aCoverPictureStream);
+          imgCover.Picture.Assign(PNGPicture);
+        finally
+          PNGPicture.Free;
+        end;
+      end;
+    //If BMP
+    if aMIMEType = 'image/bmp' then
+      begin
+        aCoverPictureStream.Seek(0, soFromBeginning);
+        imgCover.Picture.Bitmap.LoadFromStream(aCoverPictureStream);
+      end;
+  except
+    Result := False;
+  end;
+end;
 
 function TViewAddingFiles.GetActiveMediaFile: PMediaFile;
 var
@@ -227,6 +301,9 @@ begin
 end;
 
 procedure TViewAddingFiles.RenderMediaFileDetail(const aMediaFile: TMediaFile);
+var
+  CoverPictureStream: TStream;
+  MIMEType: string;
 begin
   leFileName.Text := aMediaFile.FileInfo.FileName;
   leFullPath.Text := aMediaFile.FileInfo.FullPath;
@@ -268,6 +345,21 @@ begin
   leWMAGenre.Text := aMediaFile.WMA.Genre;
   leWMAComment.Text := aMediaFile.WMA.Comment;
   leWMAAlbumArtist.Text := aMediaFile.WMA.AlbumArtist;
+
+  imgCover.Picture.Assign(nil);
+  lblCoverSize.Visible := False;
+  if not aMediaFile.NewCoverPicture.IsEmpty then
+    LoadCoverPictureFromFile(aMediaFile.NewCoverPicture)
+  else
+  if aMediaFile.MediaFormat = mfMP3 then
+    begin
+      CoverPictureStream := aMediaFile.ID3v2.GetCoverPictureStream(MIMEType);
+      if CoverPictureStream <> nil then
+        begin
+          LoadCoverPictureFromStream(CoverPictureStream, MIMEType);
+          CoverPictureStream.Free;
+        end;
+    end;
 end;
 
 procedure TViewAddingFiles.RenderMediaFile(var aMediaFile: TMediaFile);
@@ -407,6 +499,17 @@ begin
         CellText := Album.Title;
       end;
   end;
+end;
+
+procedure TViewAddingFiles.btnAddCoverClick(Sender: TObject);
+begin
+  inherited;
+
+  if dpgCoverPicture.Execute then
+    begin
+      if LoadCoverPictureFromFile(dpgCoverPicture.FileName) then
+        GetActiveMediaFile.NewCoverPicture := dpgCoverPicture.FileName;
+    end;
 end;
 
 procedure TViewAddingFiles.FormCreate(Sender: TObject);
