@@ -241,6 +241,8 @@ var
 begin
   ID3v2Tag := TID3v2Tag.Create;
   try
+    ID3v2Tag.LoadFromFile(aPath);
+
     ID3v2Tag.SetUnicodeText('TRCK', Self.Track);
     ID3v2Tag.SetUnicodeText('MCDI', Self.Disc);
     ID3v2Tag.SetUnicodeText('TIT2', Self.Title);
@@ -273,6 +275,8 @@ var
 begin
   ID3v1Tag := TID3v1Tag.Create;
   try
+    ID3v1Tag.LoadFromFile(aPath);
+
     ID3v1Tag.Track := Self.Track.ToInteger;
     ID3v1Tag.Album := Self.Album;
     ID3v1Tag.Artist := Self.Artist;
