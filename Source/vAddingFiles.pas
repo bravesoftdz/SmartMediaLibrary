@@ -14,12 +14,6 @@ uses
   eTrack, Vcl.ExtDlgs;
 
 type
-  TFileNode = record
-    FileName: WideString;
-    Hash: WideString;
-    Path: WideString;
-  end;
-
   TViewAddingFiles = class(TViewVCLBase)
     pnlButtons: TPanel;
     pnlTrees: TPanel;
@@ -91,8 +85,6 @@ type
     dpgCoverPicture: TOpenPictureDialog;
     lblCoverSize: TLabel;
     procedure FormShow(Sender: TObject);
-    procedure vstFilesGetNodeDataSize(Sender: TBaseVirtualTree;
-      var NodeDataSize: Integer);
     procedure vstFilesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure FormCreate(Sender: TObject);
@@ -106,25 +98,32 @@ type
     procedure vstFilesEnter(Sender: TObject);
     procedure leWMAGenreChange(Sender: TObject);
     procedure btnAddCoverClick(Sender: TObject);
+    procedure tsTagID3v1Show(Sender: TObject);
+    procedure tsTagID3v2Show(Sender: TObject);
+    procedure tsFileShow(Sender: TObject);
   private
     { Private declarations }
     FBind: TORMBind;
-    FMediaFileArr: TArray<TMediaFile>;
-    function GetActiveMediaFile: PMediaFile;
+    FMediaFileList: TMediaFileList;
+    function GetActiveMediaFile: TMediaFile;
     function LoadCoverPictureFromFile(const aPath: string): Boolean;
     function LoadCoverPictureFromStream(aCoverPictureStream: TStream; const aMIMEType: string): Boolean;
     procedure RenderAlbumDetail(aAlbum: TAlbum);
     procedure RenderAlbumTree(aArtist: TArtist; aAlbum: TAlbum);
     procedure RenderArtistDetail(aArtist: TArtist);
     procedure RenderArtistTree(aArtist: TArtist);
-    procedure RenderMediaFileDetail(const aMediaFile: TMediaFile);
-    procedure RenderMediaFileGrid(const aMediaFile: TMediaFile);
+    procedure RenderFileInfo(aMediaFile: TMediaFile);
+    procedure RenderID3v1(aID3v1: TID3v1);
+    procedure RenderID3v2(aID3v2: TID3v2);
+    procedure RenderMediaFileDetail(aMediaFile: TMediaFile);
+    procedure RenderMediaFileGrid(aMediaFile: TMediaFile);
     procedure RenderTrackDetail(aTrackRel: TTrackRel);
     procedure ShowPages(aTabSheetArr: TArray<TTabSheet>);
+    property ActiveMediaFile: TMediaFile read GetActiveMediaFile;
   public
     { Public declarations }
-    procedure RenderMediaFile(var aMediaFile: TMediaFile);
-    property MediaFileArr: TArray<TMediaFile> read FMediaFileArr;
+    procedure RenderMediaFile(aMediaFile: TMediaFile);
+    property MediaFileList: TMediaFileList read FMediaFileList;
   end;
 
 var
@@ -138,6 +137,49 @@ uses
   API_VCL_UIExt,
   Vcl.Imaging.jpeg,
   Vcl.Imaging.pngimage;
+
+procedure TViewAddingFiles.RenderFileInfo(aMediaFile: TMediaFile);
+begin
+  leFileName.Text := aMediaFile.FileInfo.FileName;
+  leFullPath.Text := aMediaFile.FileInfo.FullPath;
+
+  leDestFileName.Text := aMediaFile.Destination.FileName;
+  leDestFullPath.Text := aMediaFile.Destination.FullPath;
+end;
+
+procedure TViewAddingFiles.RenderID3v2(aID3v2: TID3v2);
+begin
+  leT2Track.Text := aID3v2.Track;
+  leT2Disc.Text := aID3v2.Disc;
+  leT2Title.Text := aID3v2.Title;
+  leT2Artist.Text := aID3v2.Artist;
+  leT2Album.Text := aID3v2.Album;
+  if aID3v2.Year > 0 then
+    leT2Year.Text := aID3v2.Year.ToString;
+  leT2Genre.Text := aID3v2.Genre;
+  leT2Comment.Text := aID3v2.Comment;
+  leT2AlbumArtist.Text := aID3v2.AlbumArtist;
+  leT2Composer.Text := aID3v2.Composer;
+  leT2Publisher.Text := aID3v2.Publisher;
+  leT2OrigArtist.Text := aID3v2.OrigArtist;
+  leT2Copyright.Text := aID3v2.Copyright;
+  leT2URL.Text := aID3v2.URL;
+  leT2Encoded.Text := aID3v2.Encoded;
+  leT2BPM.Text := aID3v2.BPM;
+end;
+
+procedure TViewAddingFiles.RenderID3v1(aID3v1: TID3v1);
+begin
+  inherited;
+
+  leTrack.Text := aID3v1.Track;
+  leTitle.Text := aID3v1.Title;
+  leArtist.Text := aID3v1.Artist;
+  leAlbum.Text := aID3v1.Album;
+  leYear.Text := aID3v1.Year.ToString;
+  leGenre.Text := aID3v1.Genre;
+  leComment.Text := aID3v1.Comment;
+end;
 
 function TViewAddingFiles.LoadCoverPictureFromFile(const aPath: string): Boolean;
 var
@@ -201,15 +243,12 @@ begin
   end;
 end;
 
-function TViewAddingFiles.GetActiveMediaFile: PMediaFile;
-var
-  FileNode: TFileNode;
+function TViewAddingFiles.GetActiveMediaFile: TMediaFile;
 begin
+  Result := nil;
+
   if vstFiles.FocusedNode <> nil then
-    begin
-      FileNode := vstFiles.GetNodeData<TFileNode>(vstFiles.FocusedNode);
-      Result := FMediaFileArr.FindByHash(FileNode.Hash);
-    end;
+    Result := vstFiles.GetNodeData<TMediaFile>(vstFiles.FocusedNode);
 end;
 
 procedure TViewAddingFiles.leWMAGenreChange(Sender: TObject);
@@ -217,7 +256,7 @@ begin
   inherited;
 
   if leWMAGenre.Modified then
-    GetActiveMediaFile^.WMA.Genre := leWMAGenre.Text;
+    ActiveMediaFile.WMA.Genre := leWMAGenre.Text;
 end;
 
 procedure TViewAddingFiles.ShowPages(aTabSheetArr: TArray<TTabSheet>);
@@ -244,22 +283,41 @@ begin
     end;
 end;
 
+procedure TViewAddingFiles.tsFileShow(Sender: TObject);
+begin
+  inherited;
+
+  if ActiveMediaFile <> nil then
+    RenderFileInfo(ActiveMediaFile);
+end;
+
+procedure TViewAddingFiles.tsTagID3v1Show(Sender: TObject);
+begin
+  inherited;
+
+  if ActiveMediaFile <> nil then
+    RenderID3v1(ActiveMediaFile.ID3v1);
+end;
+
+procedure TViewAddingFiles.tsTagID3v2Show(Sender: TObject);
+begin
+  inherited;
+
+  if ActiveMediaFile <> nil then
+    RenderID3v2(ActiveMediaFile.ID3v2);
+end;
+
 procedure TViewAddingFiles.RenderAlbumDetail(aAlbum: TAlbum);
 begin
   FBind.BindEntity(aAlbum, 'Album');
 end;
 
-procedure TViewAddingFiles.RenderMediaFileGrid(const aMediaFile: TMediaFile);
+procedure TViewAddingFiles.RenderMediaFileGrid(aMediaFile: TMediaFile);
 var
-  FileNode: TFileNode;
   VirtualNode: PVirtualNode;
 begin
-  FileNode.FileName := aMediaFile.FileInfo.FileName;
-  FileNode.Hash := aMediaFile.Hash;
-  FileNode.Path := aMediaFile.FileInfo.FullPath;
-
   VirtualNode := vstFiles.AddChild(nil);
-  VirtualNode.SetData<TFileNode>(FileNode);
+  VirtualNode.SetData<TMediaFile>(aMediaFile);
 end;
 
 procedure TViewAddingFiles.RenderArtistDetail(aArtist: TArtist);
@@ -300,42 +358,14 @@ begin
     end;
 end;
 
-procedure TViewAddingFiles.RenderMediaFileDetail(const aMediaFile: TMediaFile);
+procedure TViewAddingFiles.RenderMediaFileDetail(aMediaFile: TMediaFile);
 var
   CoverPictureStream: TStream;
   MIMEType: string;
 begin
-  leFileName.Text := aMediaFile.FileInfo.FileName;
-  leFullPath.Text := aMediaFile.FileInfo.FullPath;
-
-  leDestFileName.Text := aMediaFile.Destination.FileName;
-  leDestFullPath.Text := aMediaFile.Destination.FullPath;
-
-  leTrack.Text := aMediaFile.ID3v1.Track;
-  leTitle.Text := aMediaFile.ID3v1.Title;
-  leArtist.Text := aMediaFile.ID3v1.Artist;
-  leAlbum.Text := aMediaFile.ID3v1.Album;
-  leYear.Text := aMediaFile.ID3v1.Year.ToString;
-  leGenre.Text := aMediaFile.ID3v1.Genre;
-  leComment.Text := aMediaFile.ID3v1.Comment;
-
-  leT2Track.Text := aMediaFile.ID3v2.Track;
-  leT2Disc.Text := aMediaFile.ID3v2.Disc;
-  leT2Title.Text := aMediaFile.ID3v2.Title;
-  leT2Artist.Text := aMediaFile.ID3v2.Artist;
-  leT2Album.Text := aMediaFile.ID3v2.Album;
-  if aMediaFile.ID3v2.Year > 0 then
-    leT2Year.Text := aMediaFile.ID3v2.Year.ToString;
-  leT2Genre.Text := aMediaFile.ID3v2.Genre;
-  leT2Comment.Text := aMediaFile.ID3v2.Comment;
-  leT2AlbumArtist.Text := aMediaFile.ID3v2.AlbumArtist;
-  leT2Composer.Text := aMediaFile.ID3v2.Composer;
-  leT2Publisher.Text := aMediaFile.ID3v2.Publisher;
-  leT2OrigArtist.Text := aMediaFile.ID3v2.OrigArtist;
-  leT2Copyright.Text := aMediaFile.ID3v2.Copyright;
-  leT2URL.Text := aMediaFile.ID3v2.URL;
-  leT2Encoded.Text := aMediaFile.ID3v2.Encoded;
-  leT2BPM.Text := aMediaFile.ID3v2.BPM;
+  RenderFileInfo(aMediaFile);
+  RenderID3v1(aMediaFile.ID3v1);
+  RenderID3v2(aMediaFile.ID3v2);
 
   leWMATrack.Text := aMediaFile.WMA.Track;
   leWMATitle.Text := aMediaFile.WMA.Title;
@@ -362,9 +392,9 @@ begin
     end;
 end;
 
-procedure TViewAddingFiles.RenderMediaFile(var aMediaFile: TMediaFile);
+procedure TViewAddingFiles.RenderMediaFile(aMediaFile: TMediaFile);
 begin
-  FMediaFileArr := FMediaFileArr + [aMediaFile];
+  FMediaFileList.Add(aMediaFile);
   RenderMediaFileGrid(aMediaFile);
 
   if aMediaFile.Artist <> nil then
@@ -384,14 +414,14 @@ end;
 procedure TViewAddingFiles.vstFilesFocusChanged(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
 var
-  MediaFile: PMediaFile;
+  MediaFile: TMediaFile;
   TrackRel: TTrackRel;
 begin
   inherited;
 
   if Sender.FocusedNode <> nil then
     begin
-      MediaFile := GetActiveMediaFile;
+      MediaFile := ActiveMediaFile;
 
       if MediaFile.MediaFormat = mfMP3 then
         ShowPages([tsFile, tsArtist, tsAlbum, tsTrack, tsTagID3v1, tsTagID3v2, tsCover])
@@ -401,7 +431,7 @@ begin
       else
         ShowPages([]);
 
-      RenderMediaFileDetail(MediaFile^);
+      RenderMediaFileDetail(MediaFile);
 
       TrackRel := MediaFile.TrackRel;
       if TrackRel <> nil then
@@ -409,26 +439,18 @@ begin
     end;
 end;
 
-procedure TViewAddingFiles.vstFilesGetNodeDataSize(Sender: TBaseVirtualTree;
-  var NodeDataSize: Integer);
-begin
-  inherited;
-
-  NodeDataSize := SizeOf(TFileNode);
-end;
-
 procedure TViewAddingFiles.vstFilesGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
 var
-  FileNode: TFileNode;
+  MediaFile: TMediaFile;
 begin
   inherited;
 
-  FileNode := Sender.GetNodeData<TFileNode>(Node);
+  MediaFile := Sender.GetNodeData<TMediaFile>(Node);
   case Column of
-    0: CellText := FileNode.FileName;
-    1: CellText := FileNode.Path;
+    0: CellText := MediaFile.FileInfo.FileName;
+    1: CellText := MediaFile.FileInfo.FullPath;
   end;
 end;
 
@@ -455,7 +477,7 @@ begin
 
         RenderArtistDetail(Artist);
 
-        for MediaFile in FMediaFileArr do
+        for MediaFile in FMediaFileList do
           if MediaFile.Artist = Artist then
             RenderMediaFileGrid(MediaFile);
       end;
@@ -468,7 +490,7 @@ begin
 
         RenderAlbumDetail(Album);
 
-        for MediaFile in FMediaFileArr do
+        for MediaFile in FMediaFileList do
           if MediaFile.Album = Album then
             RenderMediaFileGrid(MediaFile);
       end;
@@ -508,7 +530,7 @@ begin
   if dpgCoverPicture.Execute then
     begin
       if LoadCoverPictureFromFile(dpgCoverPicture.FileName) then
-        GetActiveMediaFile.NewCoverPicture := dpgCoverPicture.FileName;
+        ActiveMediaFile.NewCoverPicture := dpgCoverPicture.FileName;
     end;
 end;
 
@@ -516,7 +538,7 @@ procedure TViewAddingFiles.FormCreate(Sender: TObject);
 begin
   inherited;
 
-  FMediaFileArr := [];
+  FMediaFileList := TMediaFileList.Create;
   FBind := TORMBind.Create(Self);
 end;
 

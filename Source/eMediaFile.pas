@@ -7,7 +7,8 @@ uses
   eAlbum,
   eArtist,
   eTrack,
-  System.Classes;
+  System.Classes,
+  System.Generics.Collections;
 
 type
   TMediaType = (mtUnknown, mtAudio, mtVideo);
@@ -72,17 +73,18 @@ type
     FullPath: string;
   end;
 
-  PMediaFile = ^TMediaFile;
-  TMediaFile = record
+  TMediaFile = class
   private
+    FFileFormat: string;
+    FPathFormat: string;
     function GetSubArr(aFileFormat: string): TArray<string>;
     function ReplaceSub(aOldStr, aSub: string): string;
+    procedure UpdateDestination;
   public
     Album: TAlbum;
     Artist: TArtist;
     Destination: TDestination;
     FileInfo: TFileInfo;
-    Hash: string;
     ID3v1: TID3v1;
     ID3v2: TID3v2;
     MediaFormat: TMediaFormat;
@@ -92,13 +94,13 @@ type
     TrackOrder: Integer;
     WMA: TWMA;
     Year: Integer;
+    procedure OnTrackOrderChanged;
+    procedure OnTrackTitleChanged;
     procedure SetDestFileName(const aFileFormat: string);
     procedure SetDestPath(const aPathFormat: string);
   end;
 
-  TMediaFileArrHelper = record helper for TArray<TMediaFile>
-    function FindByHash(aHash: string): PMediaFile;
-  end;
+  TMediaFileList = TObjectList<TMediaFile>;
 
   function GetMIMEType(const aPath: string): string;
 
@@ -110,6 +112,28 @@ uses
   System.IOUtils,
   System.SysUtils,
   WMATagLibrary;
+
+procedure TMediaFile.OnTrackOrderChanged;
+begin
+  ID3v1.Track := Album.TrackNum[TrackRel.Track];
+  ID3v2.Track := Album.TrackNum[TrackRel.Track];
+
+  UpdateDestination;
+end;
+
+procedure TMediaFile.UpdateDestination;
+begin
+  SetDestFileName(FFileFormat);
+  SetDestPath(FPathFormat);
+end;
+
+procedure TMediaFile.OnTrackTitleChanged;
+begin
+  ID3v1.Title := TrackRel.Track.Title;
+  ID3v2.Title := TrackRel.Track.Title;
+
+  UpdateDestination;
+end;
 
 function GetMIMEType(const aPath: string): string;
 var
@@ -355,8 +379,11 @@ var
   Sub: string;
   SubArr: TArray<string>;
 begin
-  SubArr := GetSubArr(aFileFormat);
-  FileName := aFileFormat;
+  if FFileFormat.IsEmpty then
+    FFileFormat := aFileFormat;
+
+  SubArr := GetSubArr(FFileFormat);
+  FileName := FFileFormat;
 
   for Sub in SubArr do
     FileName := ReplaceSub(FileName, Sub);
@@ -374,8 +401,11 @@ var
   Sub: string;
   SubArr: TArray<string>;
 begin
-  SubArr := GetSubArr(aPathFormat);
-  Path := aPathFormat;
+  if FPathFormat.IsEmpty then
+    FPathFormat := aPathFormat;
+
+  SubArr := GetSubArr(FPathFormat);
+  Path := FPathFormat;
 
   for Sub in SubArr do
     Path := ReplaceSub(Path, Sub);
@@ -383,23 +413,11 @@ begin
   Destination.FullPath := Path + Destination.FileName;
 end;
 
-function TMediaFileArrHelper.FindByHash(aHash: string): PMediaFile;
-var
-  i: Integer;
-  MediaFile: TMediaFile;
-begin
-  i := 0;
-  for MediaFile in Self do
-    begin
-      if MediaFile.Hash = aHash then
-        Exit(@Self[i]);
-      Inc(i);
-    end;
-end;
-
 procedure TID3v2.LoadFromFile(const aPath: string);
 var
+  Description: string;
   ID3v2Tag: TID3v2Tag;
+  LanguageID: TLanguageID;
 begin
   ID3v2Tag := TID3v2Tag.Create;
   try
@@ -413,7 +431,7 @@ begin
     Self.Album := ID3v2Tag.GetUnicodeText('TALB');
     Self.Year := StrToIntDef(ID3v2Tag.GetUnicodeText('TYER'), 0);
     Self.Genre := ID3v2DecodeGenre(ID3v2Tag.GetUnicodeText('TCON'));
-    Self.Comment := ID3v2Tag.GetUnicodeText('COMM');
+    Self.Comment := ID3v2Tag.GetUnicodeComment('COMM', LanguageID, Description);
     Self.Composer := ID3v2Tag.GetUnicodeText('TCOM');
     Self.Publisher := ID3v2Tag.GetUnicodeText('TPUB');
     Self.OrigArtist := ID3v2Tag.GetUnicodeText('TOPE');

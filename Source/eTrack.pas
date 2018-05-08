@@ -9,24 +9,30 @@ uses
 type
   TTrack = class(TEntity)
   private
+    FOnTitleChanged: TObjProc;
     FTitle: string;
+    procedure SetTitle(const aValue: string);
   public
     class function GetStructure: TSructure; override;
+    property OnTitleChanged: TObjProc read FOnTitleChanged write FOnTitleChanged;
   published
-    property Title: string read FTitle write FTitle;
+    property Title: string read FTitle write SetTitle;
   end;
 
   TTrackRel = class(TEntity)
   private
     FAlbumID: Integer;
+    FOnOrderChanged: TObjProc;
     FOrder: Integer;
     FTrack: TTrack;
     FTrackID: Integer;
   public
     class function GetStructure: TSructure; override;
+    procedure SetOrder(aValue: Integer);
+    property OnOrderChanged: TObjProc read FOnOrderChanged write FOnOrderChanged;
   published
     property AlbumID: Integer read FAlbumID write FAlbumID;
-    property Order: Integer read FOrder write FOrder;
+    property Order: Integer read FOrder write SetOrder;
     property Track: TTrack read FTrack write FTrack;
     property TrackID: Integer read FTrackID write FTrackID;
   end;
@@ -41,6 +47,22 @@ implementation
 uses
   eAlbum,
   System.SysUtils;
+
+procedure TTrackRel.SetOrder(aValue: Integer);
+begin
+  FOrder := aValue;
+
+  if Assigned(FOnOrderChanged) then
+    FOnOrderChanged;
+end;
+
+procedure TTrack.SetTitle(const aValue: string);
+begin
+  FTitle := aValue;
+
+  if Assigned(FOnTitleChanged) then
+    FOnTitleChanged;
+end;
 
 function TTrackRelList.GetTrackByName(aTrackName: string): TTrackRel;
 var

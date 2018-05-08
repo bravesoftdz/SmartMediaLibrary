@@ -46,7 +46,7 @@ uses
 
 procedure TController.OnModelStoreFilesInit(aModel: TModelStoreFiles);
 begin
-  aModel.inMediaFileArr := ViewAddingFiles.MediaFileArr;
+  aModel.inMediaFileList := ViewAddingFiles.MediaFileList;
 end;
 
 function TController.GetAudioList: TAudioList;
@@ -97,6 +97,7 @@ begin
       AudioList.Store;
     end;
 
+  ViewAddingFiles.MediaFileList.Free;
   AudioList.Free;
 end;
 
