@@ -84,6 +84,12 @@ type
     Button10: TButton;
     dpgCoverPicture: TOpenPictureDialog;
     lblCoverSize: TLabel;
+    lblAlbumCoverSize: TLabel;
+    pnlAlbumCover: TPanel;
+    imgAlbumCover: TImage;
+    btnAddAlbumCover: TButton;
+    Button2: TButton;
+    Button3: TButton;
     procedure FormShow(Sender: TObject);
     procedure vstFilesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
@@ -101,6 +107,7 @@ type
     procedure tsTagID3v1Show(Sender: TObject);
     procedure tsTagID3v2Show(Sender: TObject);
     procedure tsFileShow(Sender: TObject);
+    procedure btnAddAlbumCoverClick(Sender: TObject);
   private
     { Private declarations }
     FBind: TORMBind;
@@ -521,6 +528,17 @@ begin
         CellText := Album.Title;
       end;
   end;
+end;
+
+procedure TViewAddingFiles.btnAddAlbumCoverClick(Sender: TObject);
+begin
+  inherited;
+
+  if dpgCoverPicture.Execute then
+    begin
+      if LoadCoverPictureFromFile(dpgCoverPicture.FileName) then
+        ActiveMediaFile.NewCoverPicture := dpgCoverPicture.FileName;
+    end;
 end;
 
 procedure TViewAddingFiles.btnAddCoverClick(Sender: TObject);

@@ -22,7 +22,8 @@ uses
   eAlbum in 'eAlbum.pas',
   eTrack in 'eTrack.pas',
   API_ORM_BindVCL in '..\..\Libs\Delphi\API_ORM_BindVCL.pas',
-  API_Strings in '..\..\Libs\Delphi\API_Strings.pas';
+  API_Strings in '..\..\Libs\Delphi\API_Strings.pas',
+  ePics in 'ePics.pas';
 
 {$R *.res}
 

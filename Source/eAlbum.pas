@@ -5,19 +5,23 @@ interface
 uses
   API_ORM,
   eCommon,
+  ePics,
   eTrack;
 
 type
   TAlbum = class(TEntity)
   private
     FArtistID: Integer;
+    FPicRel: TAlbumPicRelList;
     FTitle: string;
     FTrackRels: TTrackRelList;
     FYear: Integer;
+    function GetPicRels: TAlbumPicRelList;
     function GetTrackNum(aTrack: TTrack): string;
     function GetTrackRels: TTrackRelList;
   public
     class function GetStructure: TSructure; override;
+    property PicRels: TAlbumPicRelList read GetPicRels;
     property TrackNum[aTrack: TTrack]: string read GetTrackNum;
     property TrackRels: TTrackRelList read GetTrackRels;
   published
@@ -36,6 +40,14 @@ implementation
 uses
   eArtist,
   System.SysUtils;
+
+function TAlbum.GetPicRels: TAlbumPicRelList;
+begin
+  if not Assigned(FPicRel) then
+    FPicRel := TAlbumPicRelList.Create(Self);
+
+  Result := FPicRel;
+end;
 
 function TAlbum.GetTrackRels: TTrackRelList;
 begin
