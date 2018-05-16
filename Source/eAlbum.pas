@@ -19,14 +19,17 @@ type
     function GetPicRels: TAlbumPicRelList;
     function GetTrackNum(aTrack: TTrack): string;
     function GetTrackRels: TTrackRelList;
+    procedure SetTitle(const aValue: string);
   public
+    OnTitleChangedProcArr: TArray<TMethod>;
     class function GetStructure: TSructure; override;
+    procedure AddCoverFromFile(const aPath: string);
     property PicRels: TAlbumPicRelList read GetPicRels;
     property TrackNum[aTrack: TTrack]: string read GetTrackNum;
     property TrackRels: TTrackRelList read GetTrackRels;
   published
     property ArtistID: Integer read FArtistID write FArtistID;
-    property Title: string read FTitle write FTitle;
+    property Title: string read FTitle write SetTitle;
     property Year: Integer read FYear write FYear;
   end;
 
@@ -38,8 +41,30 @@ type
 implementation
 
 uses
+  API_Files,
+  API_Types,
   eArtist,
   System.SysUtils;
+
+procedure TAlbum.AddCoverFromFile(const aPath: string);
+var
+  AlbumPicRel: TAlbumPicRel;
+begin
+  AlbumPicRel := TAlbumPicRel.Create;
+  AlbumPicRel.Pic := TPic.Create;
+  //AlbumPicRel.Pic.Pic := FileStream.
+
+  AlbumPicRel.IsDefault := True;
+
+  PicRels.Add(AlbumPicRel);
+end;
+
+procedure TAlbum.SetTitle(const aValue: string);
+begin
+  FTitle := aValue;
+
+  TMethodEngine.ExecProcArr(OnTitleChangedProcArr);
+end;
 
 function TAlbum.GetPicRels: TAlbumPicRelList;
 begin

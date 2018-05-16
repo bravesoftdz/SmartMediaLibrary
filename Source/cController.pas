@@ -111,6 +111,7 @@ procedure TController.InitDB(var aDBEngineClass: TDBEngineClass; out aConnectPar
 begin
   aDBEngineClass := TSQLiteEngine;
   aConnectOnCreate := True;
+  aConnectParams.CharacterSet := 'utf8';
   aConnectParams.DataBase := GetCurrentDir + '\DB\local.db';
 end;
 

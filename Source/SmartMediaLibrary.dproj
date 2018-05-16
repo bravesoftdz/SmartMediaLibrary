@@ -125,6 +125,7 @@
         <DCCReference Include="..\..\Libs\Delphi\API_ORM_BindVCL.pas"/>
         <DCCReference Include="..\..\Libs\Delphi\API_Strings.pas"/>
         <DCCReference Include="ePics.pas"/>
+        <DCCReference Include="..\..\Libs\Delphi\API_Types.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

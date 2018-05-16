@@ -113,8 +113,6 @@ type
     FBind: TORMBind;
     FMediaFileList: TMediaFileList;
     function GetActiveMediaFile: TMediaFile;
-    function LoadCoverPictureFromFile(const aPath: string): Boolean;
-    function LoadCoverPictureFromStream(aCoverPictureStream: TStream; const aMIMEType: string): Boolean;
     procedure RenderAlbumDetail(aAlbum: TAlbum);
     procedure RenderAlbumTree(aArtist: TArtist; aAlbum: TAlbum);
     procedure RenderArtistDetail(aArtist: TArtist);
@@ -188,68 +186,6 @@ begin
   leComment.Text := aID3v1.Comment;
 end;
 
-function TViewAddingFiles.LoadCoverPictureFromFile(const aPath: string): Boolean;
-var
-  FileStream: TFileStream;
-  MIMEType: string;
-begin
-  FileStream := TFilesEngine.GetFileStream(aPath);
-  try
-    MIMEType := GetMIMEType(aPath);
-
-    if MIMEType <> '' then
-      Result := LoadCoverPictureFromStream(FileStream, MIMEType);
-  finally
-    FileStream.Free;
-  end;
-end;
-
-function TViewAddingFiles.LoadCoverPictureFromStream(aCoverPictureStream: TStream; const aMIMEType: string): Boolean;
-var
-  JPEGPicture: TJPEGImage;
-  PNGPicture: TPNGImage;
-begin
-  Result := True;
-  try
-    //If JPG
-    if (aMIMEType = 'image/jpeg') or
-       (aMIMEType = 'image/jpg')
-    then
-      begin
-        JPEGPicture := TJPEGImage.Create;
-        try
-          JPEGPicture.LoadFromStream(aCoverPictureStream);
-          JPEGPicture.DIBNeeded;
-          imgCover.Picture.Assign(JPEGPicture);
-
-          lblCoverSize.Caption := Format('Size: %d x %d', [JPEGPicture.Width, JPEGPicture.Height]);
-          lblCoverSize.Visible := True;
-        finally
-          JPEGPicture.Free;
-        end;
-      end;
-    // If PNG
-    if aMIMEType = 'image/png' then
-      begin
-        PNGPicture := TPNGImage.Create;
-        try
-          PNGPicture.LoadFromStream(aCoverPictureStream);
-          imgCover.Picture.Assign(PNGPicture);
-        finally
-          PNGPicture.Free;
-        end;
-      end;
-    //If BMP
-    if aMIMEType = 'image/bmp' then
-      begin
-        aCoverPictureStream.Seek(0, soFromBeginning);
-        imgCover.Picture.Bitmap.LoadFromStream(aCoverPictureStream);
-      end;
-  except
-    Result := False;
-  end;
-end;
-
 function TViewAddingFiles.GetActiveMediaFile: TMediaFile;
 begin
   Result := nil;
@@ -315,8 +251,18 @@ begin
 end;
 
 procedure TViewAddingFiles.RenderAlbumDetail(aAlbum: TAlbum);
+var
+  AlbumCoverStream: TStream;
 begin
   FBind.BindEntity(aAlbum, 'Album');
+
+  AlbumCoverStream := TStream.Create;
+  try
+    AlbumCoverStream.Write(aAlbum.PicRels.Items[0].Pic.Pic, 0, Length(aAlbum.PicRels.Items[0].Pic.Pic));
+    AssignPicFromStream(imgAlbumCover, AlbumCoverStream, 'image/jpg');
+  finally
+    AlbumCoverStream.Free;
+  end;
 end;
 
 procedure TViewAddingFiles.RenderMediaFileGrid(aMediaFile: TMediaFile);
@@ -386,14 +332,14 @@ begin
   imgCover.Picture.Assign(nil);
   lblCoverSize.Visible := False;
   if not aMediaFile.NewCoverPicture.IsEmpty then
-    LoadCoverPictureFromFile(aMediaFile.NewCoverPicture)
+    AssignPicFromFile(imgCover, aMediaFile.NewCoverPicture)
   else
   if aMediaFile.MediaFormat = mfMP3 then
     begin
       CoverPictureStream := aMediaFile.ID3v2.GetCoverPictureStream(MIMEType);
       if CoverPictureStream <> nil then
         begin
-          LoadCoverPictureFromStream(CoverPictureStream, MIMEType);
+          AssignPicFromStream(imgCover, CoverPictureStream, MIMEType);
           CoverPictureStream.Free;
         end;
     end;
@@ -536,8 +482,8 @@ begin
 
   if dpgCoverPicture.Execute then
     begin
-      if LoadCoverPictureFromFile(dpgCoverPicture.FileName) then
-        ActiveMediaFile.NewCoverPicture := dpgCoverPicture.FileName;
+      if AssignPicFromFile(imgAlbumCover, dpgCoverPicture.FileName) then
+        ActiveMediaFile.Album.AddCoverFromFile(dpgCoverPicture.FileName);
     end;
 end;
 
@@ -547,7 +493,7 @@ begin
 
   if dpgCoverPicture.Execute then
     begin
-      if LoadCoverPictureFromFile(dpgCoverPicture.FileName) then
+      if AssignPicFromFile(imgCover, dpgCoverPicture.FileName) then
         ActiveMediaFile.NewCoverPicture := dpgCoverPicture.FileName;
     end;
 end;

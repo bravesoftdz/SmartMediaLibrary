@@ -4,28 +4,32 @@ interface
 
 uses
   API_ORM,
-  eCommon;
+  eCommon,
+  System.Classes,
+  System.SysUtils;
 
 type
   TPic = class(TEntity)
   private
-    FPic: string;
+    FPic: TBytes;
   public
     class function GetStructure: TSructure; override;
   published
-    property Pic: string read FPic write FPic;
+    property Pic: TBytes read FPic write FPic;
   end;
 
   TAlbumPicRel = class(TEntity)
   private
     FAlbumID: Integer;
     FIsDefault: Boolean;
+    FPic: TPic;
     FPicID: Integer;
   public
     class function GetStructure: TSructure; override;
   published
     property AlbumID: Integer read FAlbumID write FAlbumID;
     property IsDefault: Boolean read FIsDefault write FIsDefault;
+    property Pic: TPic read FPic write FPic;
     property PicID: Integer read FPicID write FPicID;
   end;
 

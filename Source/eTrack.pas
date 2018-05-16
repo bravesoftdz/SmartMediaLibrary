@@ -4,6 +4,7 @@ interface
 
 uses
   API_ORM,
+  API_Types,
   eCommon;
 
 type

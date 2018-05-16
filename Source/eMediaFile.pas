@@ -79,6 +79,7 @@ type
     FPathFormat: string;
     function GetSubArr(aFileFormat: string): TArray<string>;
     function ReplaceSub(aOldStr, aSub: string): string;
+    procedure OnAlbumTitleChanged;
     procedure UpdateDestination;
   public
     Album: TAlbum;
@@ -94,6 +95,7 @@ type
     TrackOrder: Integer;
     WMA: TWMA;
     Year: Integer;
+    procedure LinkAlbum(aAlbum: TAlbum);
     procedure OnTrackOrderChanged;
     procedure OnTrackTitleChanged;
     procedure SetDestFileName(const aFileFormat: string);
@@ -102,16 +104,34 @@ type
 
   TMediaFileList = TObjectList<TMediaFile>;
 
-  function GetMIMEType(const aPath: string): string;
-
 implementation
 
 uses
+  API_Types,
   ID3v1Library,
   ID3v2Library,
   System.IOUtils,
   System.SysUtils,
   WMATagLibrary;
+
+procedure TMediaFile.LinkAlbum(aAlbum: TAlbum);
+var
+  Proc: TObjProc;
+begin
+  Album := aAlbum;
+
+  Proc := OnAlbumTitleChanged;
+  TMethodEngine.AddProcToArr(Album.OnTitleChangedProcArr, @Proc, Self);
+  OnAlbumTitleChanged;
+end;
+
+procedure TMediaFile.OnAlbumTitleChanged;
+begin
+  ID3v1.Album := Album.Title;
+  ID3v2.Album := Album.Title;
+
+  UpdateDestination;
+end;
 
 procedure TMediaFile.OnTrackOrderChanged;
 begin
@@ -133,29 +153,6 @@ begin
   ID3v2.Title := TrackRel.Track.Title;
 
   UpdateDestination;
-end;
-
-function GetMIMEType(const aPath: string): string;
-var
-  Ext: string;
-begin
-  Result := '';
-
-  Ext := UpperCase(ExtractFileExt(aPath));
-
-  if (Ext = '.JPG') or
-     (Ext = '.JPEG')
-  then
-    Result := 'image/jpeg'
-  else
-  if (Ext = '.PNG') then
-    Result := 'image/png'
-  else
-  if (Ext = '.BMP') then
-    Result := 'image/bmp'
-  else
-  if (Ext = '.GIF') then
-    Result := 'image/gif';
 end;
 
 function TID3v2.GetCoverPictureStream(out aMIMEType: string): TStream;
@@ -198,7 +195,7 @@ var
   MIMEType: string;
   PictureType: Integer;
 begin
-  MIMEType := GetMIMEType(aPath);
+  MIMEType := TFilesEngine.GetMIMEType(aPath);
 
   if MIMEType <> '' then
     begin

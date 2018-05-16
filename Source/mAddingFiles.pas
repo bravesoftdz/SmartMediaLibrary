@@ -154,7 +154,7 @@ begin
 
       Artist.AlbumList.Add(Album);
     end;
-  outMediaFile.Album := Album;
+  outMediaFile.LinkAlbum(Album);
 
   TrackRel := Album.TrackRels.GetTrackByName(aTrackVariants[0]);
   if TrackRel = nil then
