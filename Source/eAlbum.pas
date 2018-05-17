@@ -16,6 +16,7 @@ type
     FTitle: string;
     FTrackRels: TTrackRelList;
     FYear: Integer;
+    function GetCover: TPic;
     function GetPicRels: TAlbumPicRelList;
     function GetTrackNum(aTrack: TTrack): string;
     function GetTrackRels: TTrackRelList;
@@ -24,6 +25,7 @@ type
     OnTitleChangedProcArr: TArray<TMethod>;
     class function GetStructure: TSructure; override;
     procedure AddCoverFromFile(const aPath: string);
+    property Cover: TPic read GetCover;
     property PicRels: TAlbumPicRelList read GetPicRels;
     property TrackNum[aTrack: TTrack]: string read GetTrackNum;
     property TrackRels: TTrackRelList read GetTrackRels;
@@ -44,17 +46,36 @@ uses
   API_Files,
   API_Types,
   eArtist,
+  System.Classes,
   System.SysUtils;
+
+function TAlbum.GetCover: TPic;
+var
+  AlbumPicRel: TAlbumPicRel;
+begin
+  Result := nil;
+
+  for AlbumPicRel in PicRels do
+    if AlbumPicRel.IsDefault then
+      Exit(AlbumPicRel.Pic);
+end;
 
 procedure TAlbum.AddCoverFromFile(const aPath: string);
 var
   AlbumPicRel: TAlbumPicRel;
+  PictureStream: TFileStream;
 begin
   AlbumPicRel := TAlbumPicRel.Create;
-  AlbumPicRel.Pic := TPic.Create;
-  //AlbumPicRel.Pic.Pic := FileStream.
-
   AlbumPicRel.IsDefault := True;
+  AlbumPicRel.Pic := TPic.Create;
+
+  PictureStream := TFilesEngine.CreateFileStream(aPath);
+  try
+    AlbumPicRel.Pic.AssignStream(PictureStream);
+    AlbumPicRel.Pic.MIMEType := TFilesEngine.GetMIMEType(aPath);
+  finally
+    PictureStream.Free;
+  end;
 
   PicRels.Add(AlbumPicRel);
 end;

@@ -4,6 +4,7 @@ interface
 
 uses
   API_Files,
+  API_Types,
   eAlbum,
   eArtist,
   eTrack,
@@ -61,7 +62,7 @@ type
     Track: string;
     URL: string;
     Year: Integer;
-    function GetCoverPictureStream(out aMIMEType: string): TStream;
+    function CreateCoverPictureStream(out aMIMEType: TMIMEType): TStream;
     procedure LoadFromFile(const aPath: string);
     procedure SaveToFile(const aPath: string);
     procedure SetCoverPictureFromFile(const aPath: string);
@@ -107,7 +108,6 @@ type
 implementation
 
 uses
-  API_Types,
   ID3v1Library,
   ID3v2Library,
   System.IOUtils,
@@ -155,15 +155,17 @@ begin
   UpdateDestination;
 end;
 
-function TID3v2.GetCoverPictureStream(out aMIMEType: string): TStream;
+function TID3v2.CreateCoverPictureStream(out aMIMEType: TMIMEType): TStream;
 var
   Description: string;
   ID3v2Tag: TID3v2Tag;
   Index: Integer;
+  MIME: string;
   PictureType: Integer;
   Success: Boolean;
 begin
   Result := TMemoryStream.Create;
+
   ID3v2Tag := TID3v2Tag.Create;
   try
     ID3v2Tag.LoadFromFile(FFileName);
@@ -175,10 +177,12 @@ begin
         Exit;
       end;
 
-    Success := ID3v2Tag.GetUnicodeCoverPictureStream(Index, Result, aMIMEType, Description, PictureType);
-    aMIMEType := aMIMEType.ToLower;
+    Success := ID3v2Tag.GetUnicodeCoverPictureStream(Index, Result, MIME, Description, PictureType);
+    aMIMEType := StrToMIMEType(MIME.ToLower);
 
-    if not Success then
+    if not Success or
+       (Result.Size = 0)
+    then
       begin
         FreeAndNil(Result);
         Exit;
@@ -192,12 +196,12 @@ procedure TID3v2.SetCoverPictureFromFile(const aPath: string);
 var
   FrameIndex: Integer;
   ID3v2Tag: TID3v2Tag;
-  MIMEType: string;
+  MIMEType: TMIMEType;
   PictureType: Integer;
 begin
   MIMEType := TFilesEngine.GetMIMEType(aPath);
 
-  if MIMEType <> '' then
+  if MIMEType <> TMIMEType.mtUnknown then
     begin
       ID3v2Tag := TID3v2Tag.Create;
       try
@@ -205,7 +209,7 @@ begin
 
         FrameIndex := ID3v2Tag.AddFrame('APIC');
         PictureType := $03;
-        ID3v2Tag.SetUnicodeCoverPictureFromFile(FrameIndex, '', aPath, MIMEType, PictureType);
+        ID3v2Tag.SetUnicodeCoverPictureFromFile(FrameIndex, '', aPath, MIMETypeToStr(MIMEType), PictureType);
         ID3v2Tag.SaveToFile(FFileName);
       finally
         ID3v2Tag.Free;

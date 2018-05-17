@@ -112,6 +112,7 @@ type
     { Private declarations }
     FBind: TORMBind;
     FMediaFileList: TMediaFileList;
+    function GetActiveAlbum: TAlbum;
     function GetActiveMediaFile: TMediaFile;
     procedure RenderAlbumDetail(aAlbum: TAlbum);
     procedure RenderAlbumTree(aArtist: TArtist; aAlbum: TAlbum);
@@ -124,6 +125,7 @@ type
     procedure RenderMediaFileGrid(aMediaFile: TMediaFile);
     procedure RenderTrackDetail(aTrackRel: TTrackRel);
     procedure ShowPages(aTabSheetArr: TArray<TTabSheet>);
+    property ActiveAlbum: TAlbum read GetActiveAlbum;
     property ActiveMediaFile: TMediaFile read GetActiveMediaFile;
   public
     { Public declarations }
@@ -139,9 +141,22 @@ implementation
 {$R *.dfm}
 
 uses
+  API_Types,
   API_VCL_UIExt,
+  ePics,
   Vcl.Imaging.jpeg,
   Vcl.Imaging.pngimage;
+
+function TViewAddingFiles.GetActiveAlbum: TAlbum;
+begin
+  Result := nil;
+
+  if ActiveMediaFile <> nil then
+    Exit(ActiveMediaFile.Album);
+
+  if vstLibrary.FocusedNode <> nil then
+    Result := vstLibrary.GetNodeData<TAlbum>(vstLibrary.FocusedNode);
+end;
 
 procedure TViewAddingFiles.RenderFileInfo(aMediaFile: TMediaFile);
 begin
@@ -253,16 +268,20 @@ end;
 procedure TViewAddingFiles.RenderAlbumDetail(aAlbum: TAlbum);
 var
   AlbumCoverStream: TStream;
+  MIMEType: TMIMEType;
 begin
   FBind.BindEntity(aAlbum, 'Album');
 
-  AlbumCoverStream := TStream.Create;
-  try
-    AlbumCoverStream.Write(aAlbum.PicRels.Items[0].Pic.Pic, 0, Length(aAlbum.PicRels.Items[0].Pic.Pic));
-    AssignPicFromStream(imgAlbumCover, AlbumCoverStream, 'image/jpg');
-  finally
-    AlbumCoverStream.Free;
-  end;
+  if aAlbum.Cover <> nil then
+    begin
+      AlbumCoverStream := aAlbum.Cover.CreateStream;
+      MIMEType := aAlbum.Cover.MIMEType;
+      try
+        AssignPicFromStream(imgAlbumCover, MIMEType, AlbumCoverStream);
+      finally
+        AlbumCoverStream.Free;
+      end;
+    end;
 end;
 
 procedure TViewAddingFiles.RenderMediaFileGrid(aMediaFile: TMediaFile);
@@ -314,7 +333,7 @@ end;
 procedure TViewAddingFiles.RenderMediaFileDetail(aMediaFile: TMediaFile);
 var
   CoverPictureStream: TStream;
-  MIMEType: string;
+  MIMEType: TMIMEType;
 begin
   RenderFileInfo(aMediaFile);
   RenderID3v1(aMediaFile.ID3v1);
@@ -336,11 +355,14 @@ begin
   else
   if aMediaFile.MediaFormat = mfMP3 then
     begin
-      CoverPictureStream := aMediaFile.ID3v2.GetCoverPictureStream(MIMEType);
+      CoverPictureStream := aMediaFile.ID3v2.CreateCoverPictureStream(MIMEType);
       if CoverPictureStream <> nil then
         begin
-          AssignPicFromStream(imgCover, CoverPictureStream, MIMEType);
+          AssignPicFromStream(imgCover, MIMEType, CoverPictureStream, True);
           CoverPictureStream.Free;
+
+          lblCoverSize.Caption := Format('Size: %d x %d', [imgCover.Picture.Width, imgCover.Picture.Height]);
+          lblCoverSize.Visible := True;
         end;
     end;
 end;
@@ -483,7 +505,7 @@ begin
   if dpgCoverPicture.Execute then
     begin
       if AssignPicFromFile(imgAlbumCover, dpgCoverPicture.FileName) then
-        ActiveMediaFile.Album.AddCoverFromFile(dpgCoverPicture.FileName);
+        ActiveAlbum.AddCoverFromFile(dpgCoverPicture.FileName);
     end;
 end;
 

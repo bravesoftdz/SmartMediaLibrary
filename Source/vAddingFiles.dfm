@@ -508,7 +508,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2BPM: TLabeledEdit
             Left = 65
             Top = 297
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 20
@@ -516,11 +516,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'BPM'
             LabelPosition = lpLeft
             TabOrder = 11
+            ExplicitWidth = 209
           end
           object leT2Encoded: TLabeledEdit
             Left = 65
             Top = 272
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 41
@@ -528,11 +529,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Encoded'
             LabelPosition = lpLeft
             TabOrder = 10
+            ExplicitWidth = 209
           end
           object leT2URL: TLabeledEdit
             Left = 65
             Top = 247
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 19
@@ -540,11 +542,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'URL'
             LabelPosition = lpLeft
             TabOrder = 9
+            ExplicitWidth = 209
           end
           object leT2Copyright: TLabeledEdit
             Left = 65
             Top = 322
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 47
@@ -552,11 +555,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Copyright'
             LabelPosition = lpLeft
             TabOrder = 12
+            ExplicitWidth = 209
           end
           object leT2OrigArtist: TLabeledEdit
             Left = 65
             Top = 397
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 50
@@ -564,11 +568,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Orig.Artist'
             LabelPosition = lpLeft
             TabOrder = 15
+            ExplicitWidth = 209
           end
           object leT2Publisher: TLabeledEdit
             Left = 65
             Top = 372
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 43
@@ -576,11 +581,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Publisher'
             LabelPosition = lpLeft
             TabOrder = 14
+            ExplicitWidth = 209
           end
           object leT2Composer: TLabeledEdit
             Left = 65
             Top = 347
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 48
@@ -588,11 +594,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Composer'
             LabelPosition = lpLeft
             TabOrder = 13
+            ExplicitWidth = 209
           end
           object leT2AlbumArtist: TLabeledEdit
             Left = 65
             Top = 222
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 58
@@ -600,11 +607,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Album Artist'
             LabelPosition = lpLeft
             TabOrder = 8
+            ExplicitWidth = 209
           end
           object leT2Comment: TLabeledEdit
             Left = 65
             Top = 197
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 45
@@ -612,11 +620,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Comment'
             LabelPosition = lpLeft
             TabOrder = 7
+            ExplicitWidth = 209
           end
           object leT2Genre: TLabeledEdit
             Left = 65
             Top = 172
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 29
@@ -624,11 +633,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Genre'
             LabelPosition = lpLeft
             TabOrder = 6
+            ExplicitWidth = 209
           end
           object leT2Year: TLabeledEdit
             Left = 65
             Top = 147
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 22
@@ -636,11 +646,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Year'
             LabelPosition = lpLeft
             TabOrder = 5
+            ExplicitWidth = 209
           end
           object leT2Album: TLabeledEdit
             Left = 65
             Top = 122
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 29
@@ -648,11 +659,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Album'
             LabelPosition = lpLeft
             TabOrder = 4
+            ExplicitWidth = 209
           end
           object leT2Artist: TLabeledEdit
             Left = 65
             Top = 97
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 26
@@ -660,11 +672,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Artist'
             LabelPosition = lpLeft
             TabOrder = 3
+            ExplicitWidth = 209
           end
           object leT2Title: TLabeledEdit
             Left = 65
             Top = 72
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 20
@@ -672,11 +685,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Title'
             LabelPosition = lpLeft
             TabOrder = 2
+            ExplicitWidth = 209
           end
           object leT2Disc: TLabeledEdit
             Left = 65
             Top = 47
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 19
@@ -684,11 +698,12 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Disc'
             LabelPosition = lpLeft
             TabOrder = 1
+            ExplicitWidth = 209
           end
           object leT2Track: TLabeledEdit
             Left = 65
             Top = 22
-            Width = 209
+            Width = 158
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 26
@@ -696,6 +711,7 @@ inherited ViewAddingFiles: TViewAddingFiles
             EditLabel.Caption = 'Track'
             LabelPosition = lpLeft
             TabOrder = 0
+            ExplicitWidth = 209
           end
         end
       end
@@ -806,6 +822,10 @@ inherited ViewAddingFiles: TViewAddingFiles
       object tsCover: TTabSheet
         Caption = 'Cover'
         ImageIndex = 3
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object lblCoverSize: TLabel
           Left = 240
           Top = 321
