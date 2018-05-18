@@ -24,7 +24,8 @@ uses
   API_ORM_BindVCL in '..\..\Libs\Delphi\API_ORM_BindVCL.pas',
   API_Strings in '..\..\Libs\Delphi\API_Strings.pas',
   ePics in 'ePics.pas',
-  API_Types in '..\..\Libs\Delphi\API_Types.pas';
+  API_Types in '..\..\Libs\Delphi\API_Types.pas',
+  eGenre in 'eGenre.pas';
 
 {$R *.res}
 

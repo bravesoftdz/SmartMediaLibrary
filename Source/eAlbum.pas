@@ -5,6 +5,7 @@ interface
 uses
   API_ORM,
   eCommon,
+  eGenre,
   ePics,
   eTrack;
 
@@ -12,11 +13,14 @@ type
   TAlbum = class(TEntity)
   private
     FArtistID: Integer;
-    FPicRel: TAlbumPicRelList;
+    FGenreRels: TAlbumGenreRelList;
+    FPicRels: TAlbumPicRelList;
     FTitle: string;
     FTrackRels: TTrackRelList;
     FYear: Integer;
     function GetCover: TPic;
+    function GetGenre: TGenre;
+    function GetGenreRel: TAlbumGenreRelList;
     function GetPicRels: TAlbumPicRelList;
     function GetTrackNum(aTrack: TTrack): string;
     function GetTrackRels: TTrackRelList;
@@ -27,6 +31,8 @@ type
     class function GetStructure: TSructure; override;
     procedure AddCoverFromFile(const aPath: string);
     property Cover: TPic read GetCover;
+    property Genre: TGenre read GetGenre;
+    property GenreRels: TAlbumGenreRelList read GetGenreRel;
     property PicRels: TAlbumPicRelList read GetPicRels;
     property TrackNum[aTrack: TTrack]: string read GetTrackNum;
     property TrackRels: TTrackRelList read GetTrackRels;
@@ -49,6 +55,25 @@ uses
   eArtist,
   System.Classes,
   System.SysUtils;
+
+function TAlbum.GetGenre: TGenre;
+var
+  AlbumGenreRel: TAlbumGenreRel;
+begin
+  Result := nil;
+
+  for AlbumGenreRel in GenreRels do
+    if AlbumGenreRel.IsDefault then
+      Exit(AlbumGenreRel.Genre);
+end;
+
+function TAlbum.GetGenreRel: TAlbumGenreRelList;
+begin
+  if not Assigned(FGenreRels) then
+    FGenreRels := TAlbumGenreRelList.Create(Self);
+
+  Result := FGenreRels;
+end;
 
 function TAlbum.GetCover: TPic;
 var
@@ -79,6 +104,8 @@ begin
   end;
 
   PicRels.Add(AlbumPicRel);
+
+  TMethodEngine.ExecProcArr(OnCoverChangedProcArr);
 end;
 
 procedure TAlbum.SetTitle(const aValue: string);
@@ -90,10 +117,10 @@ end;
 
 function TAlbum.GetPicRels: TAlbumPicRelList;
 begin
-  if not Assigned(FPicRel) then
-    FPicRel := TAlbumPicRelList.Create(Self);
+  if not Assigned(FPicRels) then
+    FPicRels := TAlbumPicRelList.Create(Self);
 
-  Result := FPicRel;
+  Result := FPicRels;
 end;
 
 function TAlbum.GetTrackRels: TTrackRelList;

@@ -103,7 +103,6 @@ type
     procedure OnTrackTitleChanged;
     procedure SetDestFileName(const aFileFormat: string);
     procedure SetDestPath(const aPathFormat: string);
-    constructor Create;
   end;
 
   TMediaFileList = TObjectList<TMediaFile>;
@@ -117,15 +116,10 @@ uses
   System.SysUtils,
   WMATagLibrary;
 
-constructor TMediaFile.Create;
-begin
-  //ID3v1 := TID3v1.Create;
-  //ID3v2 := TID3v2.Create;
-end;
-
 procedure TMediaFile.OnAlbumCoverChanged;
 begin
-
+  ID3v2.FCoverPic := Album.Cover.PicBytes;
+  ID3v2.CoverPicMIME := Album.Cover.MIMEType;
 end;
 
 procedure TMediaFile.LinkAlbum(aAlbum: TAlbum);
@@ -140,7 +134,8 @@ begin
 
   Proc := OnAlbumCoverChanged;
   TMethodEngine.AddProcToArr(Album.OnCoverChangedProcArr, @Proc, Self);
-  OnAlbumCoverChanged;
+  if Album.Cover <> nil then
+    OnAlbumCoverChanged;
 end;
 
 procedure TMediaFile.OnAlbumTitleChanged;

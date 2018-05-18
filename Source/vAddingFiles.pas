@@ -90,6 +90,8 @@ type
     btnAddAlbumCover: TButton;
     Button2: TButton;
     Button3: TButton;
+    bcGenreName: TComboBox;
+    lblAlbumGenre: TLabel;
     procedure FormShow(Sender: TObject);
     procedure vstFilesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
@@ -271,6 +273,7 @@ var
   MIMEType: TMIMEType;
 begin
   FBind.BindEntity(aAlbum, 'Album');
+  //FBind.BindEntity(aAlbum.Genre, 'Genre');
 
   if aAlbum.Cover <> nil then
     begin
@@ -524,6 +527,7 @@ begin
           PictureStream := TFilesEngine.CreateFileStream(dpgCoverPicture.FileName);
           try
             ActiveMediaFile.ID3v2.SetCoverPictureFromStream(PictureStream);
+            ActiveMediaFile.ID3v2.CoverPicMIME := TFilesEngine.GetMIMEType(dpgCoverPicture.FileName);
           finally
             PictureStream.Free;
           end;

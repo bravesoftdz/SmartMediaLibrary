@@ -23,6 +23,7 @@ type
     procedure OnModelDefineFilesInit(aModel: TModelDefineFiles);
     procedure OnModelDefineFilesEnd(aModel: TModelDefineFiles);
     procedure OnModelStoreFilesInit(aModel: TModelStoreFiles);
+    procedure OnModelStoreFilesEnd(aModel: TModelStoreFiles);
     procedure PullFiles;
   end;
 
@@ -38,11 +39,20 @@ implementation
 
 uses
   API_DB_SQLite,
+  eGenre,
   System.Classes,
   System.SysUtils,
   vAddingFiles,
   Vcl.Controls,
   vMain;
+
+procedure TController.OnModelStoreFilesEnd(aModel: TModelStoreFiles);
+begin
+  ViewAddingFiles.MediaFileList.Free;
+
+  AudioList.Store;
+  AudioList.Free;
+end;
 
 procedure TController.OnModelStoreFilesInit(aModel: TModelStoreFiles);
 begin
@@ -82,23 +92,24 @@ end;
 
 procedure TController.AddFiles;
 var
+  GenreList: TGenreList;
   IsOK: Boolean;
 begin
+  GenreList := TGenreList.Create(['*'], ['NAME']);
+
   ViewAddingFiles := VCL.CreateView<TViewAddingFiles>;
 
   if ViewAddingFiles.ShowModal = mrOK then
     IsOK := True
   else
-    IsOK := False;
-
-  if IsOK then
     begin
-      CallModel<TModelStoreFiles>;
-      AudioList.Store;
+      IsOK := False;
+      ViewAddingFiles.MediaFileList.Free;
+      AudioList.Free;
     end;
 
-  ViewAddingFiles.MediaFileList.Free;
-  AudioList.Free;
+  if IsOK then
+    CallModel<TModelStoreFiles>;
 end;
 
 procedure TController.AfterCreate;
