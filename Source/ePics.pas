@@ -6,8 +6,7 @@ uses
   API_ORM,
   API_Types,
   eCommon,
-  System.Classes,
-  System.SysUtils;
+  System.Classes;
 
 type
   TPic = class(TEntity)
@@ -49,12 +48,8 @@ uses
   eAlbum;
 
 procedure TPic.AssignStream(aPicStream: TStream);
-var
-  Buffer: TBytes;
 begin
-  SetLength(Buffer, aPicStream.Size);
-  aPicStream.Read(Buffer, 0, aPicStream.Size);
-  PicBytes := StringOf(Buffer);
+  PicBytes := TStreamEngine.GetByteString(aPicStream);
 end;
 
 procedure TPic.SetMIMEType(const aValue: TMIMEType);
@@ -68,14 +63,8 @@ begin
 end;
 
 function TPic.CreateStream: TStream;
-var
-  PicByteArr: TBytes;
 begin
-  PicByteArr := BytesOf(PicBytes);
-
-  Result := TMemoryStream.Create;
-  Result.WriteData(PicByteArr, Length(PicByteArr));
-  Result.Seek(0, TSeekOrigin.soBeginning);
+  Result := TStreamEngine.CreateStreamFromByteString(PicBytes);
 end;
 
 class function TAlbumPicRel.GetStructure: TSructure;

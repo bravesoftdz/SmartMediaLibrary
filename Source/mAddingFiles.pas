@@ -107,11 +107,14 @@ end;
 procedure TModelStoreFiles.Start;
 var
   DestPath: string;
+  i: Integer;
   MediaFile: TMediaFile;
   SourcePath: string;
 begin
-  for MediaFile in inMediaFileList do
+  for i := 0 to inMediaFileList.Count - 1 do
     begin
+      MediaFile := inMediaFileList.Items[i];
+
       if MediaFile.MediaType = mtUnknown then
         Continue;
 
@@ -124,11 +127,6 @@ begin
         mfMP3: begin
                  MediaFile.ID3v1.SaveToFile(DestPath);
                  MediaFile.ID3v2.SaveToFile(DestPath);
-                 if not MediaFile.NewCoverPicture.IsEmpty then
-                   begin
-                     // will replace to dynamic ID3v2 Tag update
-                     MediaFile.ID3v2.SetCoverPictureFromFile(MediaFile.NewCoverPicture);
-                   end;
                end;
         mfWMA: MediaFile.WMA.SaveToFile(DestPath);
       end;
@@ -241,7 +239,6 @@ begin
       outMediaFile.TrackRel := nil;
       outMediaFile.TrackOrder := 0;
       outMediaFile.Year := 0;
-      outMediaFile.NewCoverPicture := '';
 
       // Read Data
       if FileInfo.Extension.ToUpper = 'MP3' then

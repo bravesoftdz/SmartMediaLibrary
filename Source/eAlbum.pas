@@ -22,6 +22,7 @@ type
     function GetTrackRels: TTrackRelList;
     procedure SetTitle(const aValue: string);
   public
+    OnCoverChangedProcArr: TArray<TMethod>;
     OnTitleChangedProcArr: TArray<TMethod>;
     class function GetStructure: TSructure; override;
     procedure AddCoverFromFile(const aPath: string);

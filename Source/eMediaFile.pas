@@ -44,6 +44,7 @@ type
 
   TID3v2 = record
   private
+    FCoverPic: string;
     FFileName: string;
   public
     Album: string;
@@ -53,6 +54,7 @@ type
     Comment: string;
     Composer: string;
     Copyright: string;
+    CoverPicMIME: TMIMEType;
     Disc: string;
     Encoded: string;
     Genre: string;
@@ -62,10 +64,10 @@ type
     Track: string;
     URL: string;
     Year: Integer;
-    function CreateCoverPictureStream(out aMIMEType: TMIMEType): TStream;
+    function CreateCoverPictureStream: TStream;
     procedure LoadFromFile(const aPath: string);
     procedure SaveToFile(const aPath: string);
-    procedure SetCoverPictureFromFile(const aPath: string);
+    procedure SetCoverPictureFromStream(aPictureStream: TStream);
   end;
 
   TDestination = record
@@ -80,6 +82,7 @@ type
     FPathFormat: string;
     function GetSubArr(aFileFormat: string): TArray<string>;
     function ReplaceSub(aOldStr, aSub: string): string;
+    procedure OnAlbumCoverChanged;
     procedure OnAlbumTitleChanged;
     procedure UpdateDestination;
   public
@@ -91,7 +94,6 @@ type
     ID3v2: TID3v2;
     MediaFormat: TMediaFormat;
     MediaType: TMediaType;
-    NewCoverPicture: string;
     TrackRel: TTrackRel;
     TrackOrder: Integer;
     WMA: TWMA;
@@ -101,6 +103,7 @@ type
     procedure OnTrackTitleChanged;
     procedure SetDestFileName(const aFileFormat: string);
     procedure SetDestPath(const aPathFormat: string);
+    constructor Create;
   end;
 
   TMediaFileList = TObjectList<TMediaFile>;
@@ -114,6 +117,17 @@ uses
   System.SysUtils,
   WMATagLibrary;
 
+constructor TMediaFile.Create;
+begin
+  //ID3v1 := TID3v1.Create;
+  //ID3v2 := TID3v2.Create;
+end;
+
+procedure TMediaFile.OnAlbumCoverChanged;
+begin
+
+end;
+
 procedure TMediaFile.LinkAlbum(aAlbum: TAlbum);
 var
   Proc: TObjProc;
@@ -123,6 +137,10 @@ begin
   Proc := OnAlbumTitleChanged;
   TMethodEngine.AddProcToArr(Album.OnTitleChangedProcArr, @Proc, Self);
   OnAlbumTitleChanged;
+
+  Proc := OnAlbumCoverChanged;
+  TMethodEngine.AddProcToArr(Album.OnCoverChangedProcArr, @Proc, Self);
+  OnAlbumCoverChanged;
 end;
 
 procedure TMediaFile.OnAlbumTitleChanged;
@@ -155,66 +173,14 @@ begin
   UpdateDestination;
 end;
 
-function TID3v2.CreateCoverPictureStream(out aMIMEType: TMIMEType): TStream;
-var
-  Description: string;
-  ID3v2Tag: TID3v2Tag;
-  Index: Integer;
-  MIME: string;
-  PictureType: Integer;
-  Success: Boolean;
+function TID3v2.CreateCoverPictureStream: TStream;
 begin
-  Result := TMemoryStream.Create;
-
-  ID3v2Tag := TID3v2Tag.Create;
-  try
-    ID3v2Tag.LoadFromFile(FFileName);
-
-    Index := ID3v2Tag.FrameExists('APIC');
-    if Index < 0 then
-      begin
-        FreeAndNil(Result);
-        Exit;
-      end;
-
-    Success := ID3v2Tag.GetUnicodeCoverPictureStream(Index, Result, MIME, Description, PictureType);
-    aMIMEType := StrToMIMEType(MIME.ToLower);
-
-    if not Success or
-       (Result.Size = 0)
-    then
-      begin
-        FreeAndNil(Result);
-        Exit;
-      end;
-  finally
-    ID3v2Tag.Free;
-  end;
+  Result := TStreamEngine.CreateStreamFromByteString(FCoverPic);
 end;
 
-procedure TID3v2.SetCoverPictureFromFile(const aPath: string);
-var
-  FrameIndex: Integer;
-  ID3v2Tag: TID3v2Tag;
-  MIMEType: TMIMEType;
-  PictureType: Integer;
+procedure TID3v2.SetCoverPictureFromStream(aPictureStream: TStream);
 begin
-  MIMEType := TFilesEngine.GetMIMEType(aPath);
-
-  if MIMEType <> TMIMEType.mtUnknown then
-    begin
-      ID3v2Tag := TID3v2Tag.Create;
-      try
-        ID3v2Tag.LoadFromFile(FFileName);
-
-        FrameIndex := ID3v2Tag.AddFrame('APIC');
-        PictureType := $03;
-        ID3v2Tag.SetUnicodeCoverPictureFromFile(FrameIndex, '', aPath, MIMETypeToStr(MIMEType), PictureType);
-        ID3v2Tag.SaveToFile(FFileName);
-      finally
-        ID3v2Tag.Free;
-      end;
-    end;
+  FCoverPic := TStreamEngine.GetByteString(aPictureStream);
 end;
 
 procedure TWMA.SaveToFile(const aPath: string);
@@ -261,8 +227,13 @@ end;
 
 procedure TID3v2.SaveToFile(const aPath: string);
 var
+  Description: string;
+  FrameIndex: Integer;
   ID3v2Tag: TID3v2Tag;
   LanguageID: TLanguageID;
+  MIME: string;
+  PictureStream: TStream;
+  PictureType: Integer;
 begin
   ID3v2Tag := TID3v2Tag.Create;
   try
@@ -287,6 +258,22 @@ begin
     ID3v2Tag.SetUnicodeText('TENC', Self.Encoded);
     ID3v2Tag.SetUnicodeText('TBPM', Self.BPM);
 
+    if CoverPicMIME <> TMIMEType.mtUnknown then
+      begin
+        PictureStream := TStreamEngine.CreateStreamFromByteString(FCoverPic);
+        try
+          if PictureStream.Size > 0 then
+            begin
+              FrameIndex := ID3v2Tag.AddFrame('APIC');
+              PictureType := $03;
+              MIME := MIMETypeToStr(CoverPicMIME);
+              ID3v2Tag.SetUnicodeCoverPictureFromStream(FrameIndex, Description, PictureStream, MIME, PictureType);
+            end;
+        finally
+          PictureStream.Free;
+        end;
+      end;
+
     ID3v2Tag.SaveToFile(aPath);
     FFileName := aPath;
   finally
@@ -302,7 +289,7 @@ begin
   try
     ID3v1Tag.LoadFromFile(aPath);
 
-    ID3v1Tag.Track := Self.Track.ToInteger;
+    ID3v1Tag.Track := StrToIntDef(Self.Track, 1);
     ID3v1Tag.Album := Self.Album;
     ID3v1Tag.Artist := Self.Artist;
     ID3v1Tag.Title := Self.Title;
@@ -418,7 +405,11 @@ procedure TID3v2.LoadFromFile(const aPath: string);
 var
   Description: string;
   ID3v2Tag: TID3v2Tag;
+  Index: Integer;
   LanguageID: TLanguageID;
+  MIME: string;
+  PictureStream: TMemoryStream;
+  PictureType: Integer;
 begin
   ID3v2Tag := TID3v2Tag.Create;
   try
@@ -440,6 +431,25 @@ begin
     Self.URL := ID3v2Tag.GetUnicodeText('WXXX');
     Self.Encoded := ID3v2Tag.GetUnicodeText('TENC');
     Self.BPM := ID3v2Tag.GetUnicodeText('TBPM');
+
+    FCoverPic := '';
+    Self.CoverPicMIME := TMIMEType.mtUnknown;
+    Index := ID3v2Tag.FrameExists('APIC');
+    if Index >= 0 then
+      begin
+        PictureStream := TMemoryStream.Create;
+        try
+          if ID3v2Tag.GetUnicodeCoverPictureStream(Index, TStream(PictureStream), MIME, Description, PictureType) and
+             (PictureStream.Size > 0)
+          then
+            begin
+              FCoverPic := TStreamEngine.GetByteString(PictureStream);
+              Self.CoverPicMIME := StrToMIMEType(MIME.ToLower);
+            end;
+        finally
+          PictureStream.Free;
+        end;
+      end;
   finally
     ID3v2Tag.Free;
   end;

@@ -350,20 +350,22 @@ begin
 
   imgCover.Picture.Assign(nil);
   lblCoverSize.Visible := False;
-  if not aMediaFile.NewCoverPicture.IsEmpty then
-    AssignPicFromFile(imgCover, aMediaFile.NewCoverPicture)
-  else
+
   if aMediaFile.MediaFormat = mfMP3 then
     begin
-      CoverPictureStream := aMediaFile.ID3v2.CreateCoverPictureStream(MIMEType);
-      if CoverPictureStream <> nil then
-        begin
-          AssignPicFromStream(imgCover, MIMEType, CoverPictureStream, True);
-          CoverPictureStream.Free;
+      MIMEType := aMediaFile.ID3v2.CoverPicMIME;
+      CoverPictureStream := aMediaFile.ID3v2.CreateCoverPictureStream;
+      try
+        if CoverPictureStream.Size > 0 then
+          begin
+            AssignPicFromStream(imgCover, MIMEType, CoverPictureStream, True);
 
-          lblCoverSize.Caption := Format('Size: %d x %d', [imgCover.Picture.Width, imgCover.Picture.Height]);
-          lblCoverSize.Visible := True;
-        end;
+            lblCoverSize.Caption := Format('Size: %d x %d', [imgCover.Picture.Width, imgCover.Picture.Height]);
+            lblCoverSize.Visible := True;
+          end;
+      finally
+        CoverPictureStream.Free;
+      end;
     end;
 end;
 
@@ -510,13 +512,22 @@ begin
 end;
 
 procedure TViewAddingFiles.btnAddCoverClick(Sender: TObject);
+var
+  PictureStream: TFileStream;
 begin
   inherited;
 
   if dpgCoverPicture.Execute then
     begin
       if AssignPicFromFile(imgCover, dpgCoverPicture.FileName) then
-        ActiveMediaFile.NewCoverPicture := dpgCoverPicture.FileName;
+        begin
+          PictureStream := TFilesEngine.CreateFileStream(dpgCoverPicture.FileName);
+          try
+            ActiveMediaFile.ID3v2.SetCoverPictureFromStream(PictureStream);
+          finally
+            PictureStream.Free;
+          end;
+        end;
     end;
 end;
 
