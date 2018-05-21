@@ -81,16 +81,20 @@ type
     FFileFormat: string;
     FPathFormat: string;
     function GetSubArr(aFileFormat: string): TArray<string>;
+    function RemoveInvalidChars(aStr: string): string;
     function ReplaceSub(aOldStr, aSub: string): string;
     procedure OnAlbumCoverChanged;
     procedure OnAlbumGenreChanged;
     procedure OnAlbumTitleChanged;
+    procedure OnAlbumYearChanged;
+    procedure OnArtistTitleChanged;
     procedure UpdateDestination;
   public
     Album: TAlbum;
     Artist: TArtist;
     Destination: TDestination;
     FileInfo: TFileInfo;
+    Genre: string;
     ID3v1: TID3v1;
     ID3v2: TID3v2;
     MediaFormat: TMediaFormat;
@@ -100,6 +104,7 @@ type
     WMA: TWMA;
     Year: Integer;
     procedure LinkAlbum(aAlbum: TAlbum);
+    procedure LinkArtist(aArtist: TArtist);
     procedure OnTrackOrderChanged;
     procedure OnTrackTitleChanged;
     procedure SetDestFileName(const aFileFormat: string);
@@ -116,6 +121,48 @@ uses
   System.IOUtils,
   System.SysUtils,
   WMATagLibrary;
+
+procedure TMediaFile.OnAlbumYearChanged;
+begin
+  ID3v1.Year := Album.Year;
+  ID3v2.Year := Album.Year;
+
+  UpdateDestination;
+end;
+
+function TMediaFile.RemoveInvalidChars(aStr: string): string;
+var
+  InvalidChar: Char;
+begin
+  Result := aStr;
+
+  for InvalidChar in TPath.GetInvalidFileNameChars do
+    if Result.IndexOf(InvalidChar) >= 0 then
+      Result := Result.Replace(InvalidChar, '');
+
+  for InvalidChar in TPath.GetInvalidPathChars + [':'] do
+    if Result.IndexOf(InvalidChar) >= 0 then
+      Result := Result.Replace(InvalidChar, '');
+end;
+
+procedure TMediaFile.OnArtistTitleChanged;
+begin
+  ID3v1.Artist := Artist.Title;
+  ID3v2.Artist := Artist.Title;
+
+  UpdateDestination;
+end;
+
+procedure TMediaFile.LinkArtist(aArtist: TArtist);
+var
+  Proc: TObjProc;
+begin
+  Artist := aArtist;
+
+  Proc := OnArtistTitleChanged;
+  TMethodEngine.AddProcToArr(Artist.OnTitleChangedProcArr, @Proc, Self);
+  OnArtistTitleChanged;
+end;
 
 procedure TMediaFile.OnAlbumGenreChanged;
 begin
@@ -150,6 +197,10 @@ begin
   TMethodEngine.AddProcToArr(Album.OnGenreChangedProcArr, @Proc, Self);
   if Album.DefaultGenre <> nil then
     OnAlbumGenreChanged;
+
+  Proc := OnAlbumYearChanged;
+  TMethodEngine.AddProcToArr(Album.OnYearChangedProcArr, @Proc, Self);
+  OnAlbumYearChanged;
 end;
 
 procedure TMediaFile.OnAlbumTitleChanged;
@@ -273,6 +324,8 @@ begin
         try
           if PictureStream.Size > 0 then
             begin
+              ID3v2Tag.DeleteAllCoverArts;
+
               FrameIndex := ID3v2Tag.AddFrame('APIC');
               PictureType := $03;
               MIME := MIMETypeToStr(CoverPicMIME);
@@ -334,6 +387,7 @@ begin
   if aSub = 'AlbumTitle' then
     NewSub := Album.Title;
 
+  NewSub := RemoveInvalidChars(NewSub);
   Result := aOldStr.Replace(Format('{%s}', [aSub]), NewSub);
 end;
 
@@ -372,7 +426,6 @@ end;
 procedure TMediaFile.SetDestFileName(const aFileFormat: string);
 var
   FileName: string;
-  InvalidChar: Char;
   Sub: string;
   SubArr: TArray<string>;
 begin
@@ -384,10 +437,6 @@ begin
 
   for Sub in SubArr do
     FileName := ReplaceSub(FileName, Sub);
-
-  for InvalidChar in TPath.GetInvalidFileNameChars do
-    if FileName.IndexOf(InvalidChar) > 0 then
-      FileName := FileName.Replace(InvalidChar, '');
 
   Destination.FileName := Format('%s.%s', [FileName, FileInfo.Extension]);
 end;

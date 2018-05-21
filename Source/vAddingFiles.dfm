@@ -122,6 +122,8 @@ inherited ViewAddingFiles: TViewAddingFiles
       Header.Font.Style = []
       Header.MainColumn = -1
       TabOrder = 1
+      OnDragAllowed = vstLibraryDragAllowed
+      OnDragOver = vstLibraryDragOver
       OnFocusChanged = vstLibraryFocusChanged
       OnGetText = vstLibraryGetText
       Columns = <>
@@ -253,8 +255,8 @@ inherited ViewAddingFiles: TViewAddingFiles
           335
           413)
         object lblAlbumCoverSize: TLabel
-          Left = 158
-          Top = 265
+          Left = 194
+          Top = 310
           Width = 58
           Height = 13
           Caption = 'lblCoverSize'
@@ -294,8 +296,8 @@ inherited ViewAddingFiles: TViewAddingFiles
         object pnlAlbumCover: TPanel
           Left = 66
           Top = 109
-          Width = 150
-          Height = 150
+          Width = 200
+          Height = 200
           BevelKind = bkTile
           BevelOuter = bvNone
           Caption = 'pnlCover'
@@ -304,8 +306,8 @@ inherited ViewAddingFiles: TViewAddingFiles
           object imgAlbumCover: TImage
             Left = 0
             Top = 0
-            Width = 146
-            Height = 146
+            Width = 196
+            Height = 196
             Align = alClient
             Center = True
             Stretch = True
@@ -314,7 +316,7 @@ inherited ViewAddingFiles: TViewAddingFiles
         end
         object btnAddAlbumCover: TButton
           Left = 66
-          Top = 289
+          Top = 331
           Width = 145
           Height = 25
           Caption = 'Add picture from file...'
@@ -329,7 +331,7 @@ inherited ViewAddingFiles: TViewAddingFiles
         end
         object Button2: TButton
           Left = 66
-          Top = 320
+          Top = 362
           Width = 145
           Height = 22
           Caption = 'Save picture to file...'
@@ -343,7 +345,7 @@ inherited ViewAddingFiles: TViewAddingFiles
         end
         object Button3: TButton
           Left = 66
-          Top = 348
+          Top = 390
           Width = 145
           Height = 22
           Caption = 'Delete this picture'
@@ -522,7 +524,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2BPM: TLabeledEdit
             Left = 65
             Top = 297
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 20
@@ -534,7 +536,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Encoded: TLabeledEdit
             Left = 65
             Top = 272
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 41
@@ -546,7 +548,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2URL: TLabeledEdit
             Left = 65
             Top = 247
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 19
@@ -558,7 +560,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Copyright: TLabeledEdit
             Left = 65
             Top = 322
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 47
@@ -570,7 +572,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2OrigArtist: TLabeledEdit
             Left = 65
             Top = 397
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 50
@@ -582,7 +584,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Publisher: TLabeledEdit
             Left = 65
             Top = 372
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 43
@@ -594,7 +596,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Composer: TLabeledEdit
             Left = 65
             Top = 347
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 48
@@ -606,7 +608,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2AlbumArtist: TLabeledEdit
             Left = 65
             Top = 222
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 58
@@ -618,7 +620,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Comment: TLabeledEdit
             Left = 65
             Top = 197
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 45
@@ -630,7 +632,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Genre: TLabeledEdit
             Left = 65
             Top = 172
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 29
@@ -642,7 +644,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Year: TLabeledEdit
             Left = 65
             Top = 147
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 22
@@ -654,7 +656,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Album: TLabeledEdit
             Left = 65
             Top = 122
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 29
@@ -666,7 +668,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Artist: TLabeledEdit
             Left = 65
             Top = 97
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 26
@@ -678,7 +680,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Title: TLabeledEdit
             Left = 65
             Top = 72
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 20
@@ -690,7 +692,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Disc: TLabeledEdit
             Left = 65
             Top = 47
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 19
@@ -702,7 +704,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Track: TLabeledEdit
             Left = 65
             Top = 22
-            Width = 107
+            Width = 226
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 26

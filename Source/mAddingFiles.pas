@@ -6,11 +6,13 @@ uses
   API_Files,
   API_MVC,
   eArtist,
+  eGenre,
   eMediaFile;
 
 type
   TModelDefineFiles = class(TModelAbstract)
   private
+    FAudioGenreList: TGenreList;
     function CheckConsilience(aStrArr: TArray<string>; aValue: string): Boolean;
     procedure AddVariant(var aStrArr: TArray<string>; aValue: string);
     procedure ApplyToAudioLib(aMediaFile: TMediaFile; const aArtistVariants,
@@ -44,6 +46,7 @@ uses
   API_Strings,
   eAlbum,
   eTrack,
+  System.Classes,
   System.SysUtils;
 
 procedure TModelDefineFiles.WriteWMAData(aMediaFile: TMediaFile);
@@ -138,10 +141,12 @@ procedure TModelDefineFiles.ApplyToAudioLib(aMediaFile: TMediaFile; const aArtis
 var
   Album: TAlbum;
   Artist: TArtist;
+  CoverStream: TStream;
+  GenreID: Integer;
   TrackRel: TTrackRel;
 begin
   Artist := outAudioList.AddOrGetArtist(aArtistVariants[0]);
-  outMediaFile.Artist := Artist;
+  outMediaFile.LinkArtist(Artist);
 
   Album := Artist.AlbumList.GetByName(aAlbumVariants[0]);
   if Album = nil then
@@ -149,6 +154,16 @@ begin
       Album := TAlbum.Create;
       Album.Title := aAlbumVariants[0];
       Album.Year := outMediaFile.Year;
+
+      GenreID := FAudioGenreList.GetGenreIDByName(outMediaFile.Genre);
+      Album.SetDefaultGenre(GenreID);
+
+      CoverStream := outMediaFile.ID3v2.CreateCoverPictureStream;
+      try 
+        Album.SetCoverFromStream(CoverStream, outMediaFile.ID3v2.CoverPicMIME);      
+      finally
+        CoverStream.Free;
+      end;
 
       Artist.AlbumList.Add(Album);
     end;
@@ -212,6 +227,7 @@ begin
 
   aMediaFile.TrackOrder := StrToIntDef(aMediaFile.ID3v1.Track, 0);
   aMediaFile.Year := aMediaFile.ID3v1.Year;
+  aMediaFile.Genre := aMediaFile.ID3v2.Genre;
 end;
 
 procedure TModelDefineFiles.Start;
@@ -224,66 +240,72 @@ var
   TrackVariants: TArray<string>;
 begin
   outAudioList := TAudioList.Create([], []);
+  FAudioGenreList := TGenreList.Create(['*'], ['NAME']);
 
-  FileInfoArr := [];
-  for FileName in inDropedFiles do
-    FileInfoArr := FileInfoArr + TFilesEngine.GetFileInfoArr(FileName);
+  try 
+    FileInfoArr := [];
+    for FileName in inDropedFiles do
+      FileInfoArr := FileInfoArr + TFilesEngine.GetFileInfoArr(FileName);
 
-  for FileInfo in FileInfoArr do
-    begin
-      // Init
-      outMediaFile := TMediaFile.Create;
-      outMediaFile.FileInfo := FileInfo;
-      outMediaFile.Album := nil;
-      outMediaFile.Artist := nil;
-      outMediaFile.TrackRel := nil;
-      outMediaFile.TrackOrder := 0;
-      outMediaFile.Year := 0;
+    for FileInfo in FileInfoArr do
+      begin
+        // Init
+        outMediaFile := TMediaFile.Create;
+        outMediaFile.FileInfo := FileInfo;
+        outMediaFile.Album := nil;
+        outMediaFile.Artist := nil;
+        outMediaFile.TrackRel := nil;
+        outMediaFile.TrackOrder := 0;
+        outMediaFile.Year := 0;
+        outMediaFile.Genre := '';
 
-      // Read Data
-      if FileInfo.Extension.ToUpper = 'MP3' then
-        begin
-          outMediaFile.MediaType := mtAudio;
-          outMediaFile.MediaFormat := mfMP3;
-          ReadMP3Data(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
-        end
-      else
-      if FileInfo.Extension.ToUpper = 'WMA' then
-        begin
-          outMediaFile.MediaType := mtAudio;
-          outMediaFile.MediaFormat := mfWMA;
-          ReadWMAData(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
-        end
-      else
-        begin
-          outMediaFile.MediaType := mtUnknown;
-          outMediaFile.MediaFormat := mfUnknown;
+        // Read Data
+        if FileInfo.Extension.ToUpper = 'MP3' then
+          begin
+            outMediaFile.MediaType := mtAudio;
+            outMediaFile.MediaFormat := mfMP3;
+            ReadMP3Data(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
+          end
+        else
+        if FileInfo.Extension.ToUpper = 'WMA' then
+          begin
+            outMediaFile.MediaType := mtAudio;
+            outMediaFile.MediaFormat := mfWMA;
+            ReadWMAData(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
+          end
+        else
+          begin
+            outMediaFile.MediaType := mtUnknown;
+            outMediaFile.MediaFormat := mfUnknown;
+          end;
+
+        ReadFileData(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
+
+        // Apply To Lib
+        case outMediaFile.MediaType of
+          mtAudio: ApplyToAudioLib(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
         end;
 
-      ReadFileData(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
+        // Write Data
+        {case outMediaFile.MediaFormat of
+          mfMP3: WriteMP3Data(outMediaFile);
+          mfWMA: WriteWMAData(outMediaFile);
+        end; }
+        // TEMP
+        outMediaFile.ID3v1.Comment := 'Alezzle`s Collection';
+        outMediaFile.ID3v2.Comment := 'Alezzle`s Collection';
 
-      // Apply To Lib
-      case outMediaFile.MediaType of
-        mtAudio: ApplyToAudioLib(outMediaFile, ArtistVariants, AlbumVariants, TrackVariants);
+        if outMediaFile.MediaType <> mtUnknown then
+          begin
+            outMediaFile.SetDestFileName(inFileFormat);
+            outMediaFile.SetDestPath(inPathFormat);
+          end;
+
+        SendMessage('OnFileAdded');
       end;
-
-      // Write Data
-      {case outMediaFile.MediaFormat of
-        mfMP3: WriteMP3Data(outMediaFile);
-        mfWMA: WriteWMAData(outMediaFile);
-      end; }
-      // TEMP
-      outMediaFile.ID3v1.Comment := 'Alezzle`s Collection';
-      outMediaFile.ID3v2.Comment := 'Alezzle`s Collection';
-
-      if outMediaFile.MediaType <> mtUnknown then
-        begin
-          outMediaFile.SetDestFileName(inFileFormat);
-          outMediaFile.SetDestPath(inPathFormat);
-        end;
-
-      SendMessage('OnFileAdded');
-    end;
+  finally
+    FAudioGenreList.Free;
+  end;
 end;
 
 end.

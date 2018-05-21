@@ -13,11 +13,13 @@ type
     FAlbumList: TAlbumList;
     FTitle: string;
     function GetAlbumList: TAlbumList;
+    procedure SetTitle(aValue: string);
   public
+    OnTitleChangedProcArr: TArray<TMethod>;
     class function GetStructure: TSructure; override;
     property AlbumList: TAlbumList read GetAlbumList;
   published
-    property Title: string read FTitle write FTitle;
+    property Title: string read FTitle write SetTitle;
   end;
 
   TAudioList = class(TEntityList<TArtist>)
@@ -30,8 +32,16 @@ type
 implementation
 
 uses
+  API_Types,
   FireDAC.Comp.Client,
   System.SysUtils;
+
+procedure TArtist.SetTitle(aValue: string);
+begin
+  FTitle := aValue;
+
+  TMethodEngine.ExecProcArr(OnTitleChangedProcArr);
+end;
 
 function TArtist.GetAlbumList: TAlbumList;
 begin

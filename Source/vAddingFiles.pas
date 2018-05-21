@@ -113,6 +113,11 @@ type
     procedure tsFileShow(Sender: TObject);
     procedure btnAddAlbumCoverClick(Sender: TObject);
     procedure cbGenreNameChange(Sender: TObject);
+    procedure vstLibraryDragOver(Sender: TBaseVirtualTree; Source: TObject;
+      Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
+      var Effect: Integer; var Accept: Boolean);
+    procedure vstLibraryDragAllowed(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
   private
     { Private declarations }
     FBind: TORMBind;
@@ -150,6 +155,7 @@ implementation
 uses
   API_Types,
   API_VCL_UIExt,
+  eCommon,
   ePics,
   Vcl.Imaging.jpeg,
   Vcl.Imaging.pngimage;
@@ -314,12 +320,15 @@ begin
   FBind.BindEntity(aAlbum, 'Album');
   DefineAlbumGenre(aAlbum.DefaultGenre);
 
+  lblAlbumCoverSize.Visible := False;
   if aAlbum.Cover <> nil then
     begin
       AlbumCoverStream := aAlbum.Cover.CreateStream;
       MIMEType := aAlbum.Cover.MIMEType;
       try
         AssignPicFromStream(imgAlbumCover, MIMEType, AlbumCoverStream);
+        lblAlbumCoverSize.Caption := Format('Size: %d x %d', [imgAlbumCover.Picture.Width, imgAlbumCover.Picture.Height]);
+        lblAlbumCoverSize.Visible := True;
       finally
         AlbumCoverStream.Free;
       end;
@@ -473,6 +482,31 @@ begin
   end;
 end;
 
+procedure TViewAddingFiles.vstLibraryDragAllowed(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+begin
+  inherited;
+
+  Allowed := True;
+end;
+
+procedure TViewAddingFiles.vstLibraryDragOver(Sender: TBaseVirtualTree;
+  Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint;
+  Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
+var
+  Target: TObject;
+begin
+  inherited;
+
+  Accept := Sender.DropTargetNode <> Sender.FocusedNode;
+
+  Target := Sender.GetNodeData<TEntity>(Sender.DropTargetNode);
+  if (Source is TArtist) and
+     (Target.ClassType = TAlbum)
+  then
+    Accept := False;
+end;
+
 procedure TViewAddingFiles.vstLibraryFocusChanged(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
 var
@@ -549,7 +583,7 @@ begin
   if dpgCoverPicture.Execute then
     begin
       if AssignPicFromFile(imgAlbumCover, dpgCoverPicture.FileName) then
-        ActiveAlbum.AddCoverFromFile(dpgCoverPicture.FileName);
+        ActiveAlbum.SetCoverFromFile(dpgCoverPicture.FileName);
     end;
 end;
 

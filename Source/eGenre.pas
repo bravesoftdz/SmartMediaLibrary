@@ -16,7 +16,10 @@ type
     property Name: string read FName write FName;
   end;
 
-  TGenreList = TEntityList<TGenre>;
+  TGenreList = class(TEntityList<TGenre>)
+  public
+    function GetGenreIDByName(const aName: string): Integer;
+  end;
 
   TAlbumGenreRel = class(TEntity)
   private
@@ -38,7 +41,19 @@ type
 implementation
 
 uses
-  eAlbum;
+  eAlbum,
+  System.SysUtils;
+
+function TGenreList.GetGenreIDByName(const aName: string): Integer;
+var
+  Genre: TGenre;
+begin
+  Result := 0;
+
+  for Genre in Self do
+    if Genre.Name.ToUpper = aName.ToUpper then
+      Exit(Genre.ID);
+end;
 
 class function TAlbumGenreRel.GetStructure: TSructure;
 begin
