@@ -96,17 +96,21 @@ var
   IsOK: Boolean;
 begin
   GenreList := TGenreList.Create(['*'], ['NAME']);
+  try
+    ViewAddingFiles := VCL.CreateView<TViewAddingFiles>;
+    ViewAddingFiles.RenderGenreList(GenreList);
 
-  ViewAddingFiles := VCL.CreateView<TViewAddingFiles>;
-
-  if ViewAddingFiles.ShowModal = mrOK then
-    IsOK := True
-  else
-    begin
-      IsOK := False;
-      ViewAddingFiles.MediaFileList.Free;
-      AudioList.Free;
-    end;
+    if ViewAddingFiles.ShowModal = mrOK then
+      IsOK := True
+    else
+      begin
+        IsOK := False;
+        ViewAddingFiles.MediaFileList.Free;
+        AudioList.Free;
+      end;
+  finally
+    GenreList.Free;
+  end;
 
   if IsOK then
     CallModel<TModelStoreFiles>;

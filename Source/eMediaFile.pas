@@ -83,6 +83,7 @@ type
     function GetSubArr(aFileFormat: string): TArray<string>;
     function ReplaceSub(aOldStr, aSub: string): string;
     procedure OnAlbumCoverChanged;
+    procedure OnAlbumGenreChanged;
     procedure OnAlbumTitleChanged;
     procedure UpdateDestination;
   public
@@ -116,6 +117,14 @@ uses
   System.SysUtils,
   WMATagLibrary;
 
+procedure TMediaFile.OnAlbumGenreChanged;
+begin
+  ID3v1.Genre := Album.DefaultGenre.Name;
+  ID3v2.Genre := Album.DefaultGenre.Name;
+
+  UpdateDestination;
+end;
+
 procedure TMediaFile.OnAlbumCoverChanged;
 begin
   ID3v2.FCoverPic := Album.Cover.PicBytes;
@@ -136,6 +145,11 @@ begin
   TMethodEngine.AddProcToArr(Album.OnCoverChangedProcArr, @Proc, Self);
   if Album.Cover <> nil then
     OnAlbumCoverChanged;
+
+  Proc := OnAlbumGenreChanged;
+  TMethodEngine.AddProcToArr(Album.OnGenreChangedProcArr, @Proc, Self);
+  if Album.DefaultGenre <> nil then
+    OnAlbumGenreChanged;
 end;
 
 procedure TMediaFile.OnAlbumTitleChanged;
@@ -394,6 +408,8 @@ begin
     Path := ReplaceSub(Path, Sub);
 
   Destination.FullPath := Path + Destination.FileName;
+  if TrackRel <> nil then
+    TrackRel.Track.Path := Destination.FullPath;
 end;
 
 procedure TID3v2.LoadFromFile(const aPath: string);

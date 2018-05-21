@@ -5,13 +5,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls,
+  Vcl.ExtDlgs,
   API_Files,
   API_MVC_VCL,
   API_ORM_BindVCL,
   eAlbum,
   eArtist,
+  eGenre,
   eMediaFile,
-  eTrack, Vcl.ExtDlgs;
+  eTrack;
 
 type
   TViewAddingFiles = class(TViewVCLBase)
@@ -90,7 +92,7 @@ type
     btnAddAlbumCover: TButton;
     Button2: TButton;
     Button3: TButton;
-    bcGenreName: TComboBox;
+    cbGenreName: TComboBox;
     lblAlbumGenre: TLabel;
     procedure FormShow(Sender: TObject);
     procedure vstFilesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -110,12 +112,14 @@ type
     procedure tsTagID3v2Show(Sender: TObject);
     procedure tsFileShow(Sender: TObject);
     procedure btnAddAlbumCoverClick(Sender: TObject);
+    procedure cbGenreNameChange(Sender: TObject);
   private
     { Private declarations }
     FBind: TORMBind;
     FMediaFileList: TMediaFileList;
     function GetActiveAlbum: TAlbum;
     function GetActiveMediaFile: TMediaFile;
+    procedure DefineAlbumGenre(aGenre: TGenre);
     procedure RenderAlbumDetail(aAlbum: TAlbum);
     procedure RenderAlbumTree(aArtist: TArtist; aAlbum: TAlbum);
     procedure RenderArtistDetail(aArtist: TArtist);
@@ -131,6 +135,7 @@ type
     property ActiveMediaFile: TMediaFile read GetActiveMediaFile;
   public
     { Public declarations }
+    procedure RenderGenreList(aGenreList: TGenreList);
     procedure RenderMediaFile(aMediaFile: TMediaFile);
     property MediaFileList: TMediaFileList read FMediaFileList;
   end;
@@ -148,6 +153,40 @@ uses
   ePics,
   Vcl.Imaging.jpeg,
   Vcl.Imaging.pngimage;
+
+procedure TViewAddingFiles.DefineAlbumGenre(aGenre: TGenre);
+var
+  Genre: TGenre;
+  i: Integer;
+begin
+  if aGenre = nil then
+    Exit;
+
+  for i := 0 to cbGenreName.Items.Count - 1 do
+    begin
+      Genre := FBind.EntityIndexed[cbGenreName, i] as TGenre;
+      if Genre.ID = aGenre.ID then
+        begin
+          cbGenreName.ItemIndex := i;
+          Break;
+        end;
+    end;
+end;
+
+procedure TViewAddingFiles.RenderGenreList(aGenreList: TGenreList);
+var
+  Genre: TGenre;
+  i: Integer;
+begin
+  i := 0;
+  for Genre in aGenreList do
+    begin
+      cbGenreName.Items.Add(Genre.Name);
+
+      FBind.AddBindItem(cbGenreName, Genre, 'Genre', i);
+      Inc(i);
+    end;
+end;
 
 function TViewAddingFiles.GetActiveAlbum: TAlbum;
 begin
@@ -273,7 +312,7 @@ var
   MIMEType: TMIMEType;
 begin
   FBind.BindEntity(aAlbum, 'Album');
-  //FBind.BindEntity(aAlbum.Genre, 'Genre');
+  DefineAlbumGenre(aAlbum.DefaultGenre);
 
   if aAlbum.Cover <> nil then
     begin
@@ -533,6 +572,16 @@ begin
           end;
         end;
     end;
+end;
+
+procedure TViewAddingFiles.cbGenreNameChange(Sender: TObject);
+var
+  Genre: TGenre;
+begin
+  inherited;
+
+  Genre := FBind.EntityIndexed[cbGenreName, cbGenreName.ItemIndex] as TGenre;
+  ActiveAlbum.SetDefaultGenre(Genre.ID);
 end;
 
 procedure TViewAddingFiles.FormCreate(Sender: TObject);

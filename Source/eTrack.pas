@@ -11,12 +11,14 @@ type
   TTrack = class(TEntity)
   private
     FOnTitleChanged: TObjProc;
+    FPath: string;
     FTitle: string;
     procedure SetTitle(const aValue: string);
   public
     class function GetStructure: TSructure; override;
     property OnTitleChanged: TObjProc read FOnTitleChanged write FOnTitleChanged;
   published
+    property Path: string read FPath write FPath;
     property Title: string read FTitle write SetTitle;
   end;
 

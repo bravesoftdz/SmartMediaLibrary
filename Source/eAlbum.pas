@@ -19,7 +19,7 @@ type
     FTrackRels: TTrackRelList;
     FYear: Integer;
     function GetCover: TPic;
-    function GetGenre: TGenre;
+    function GetDefaultGenre: TGenre;
     function GetGenreRel: TAlbumGenreRelList;
     function GetPicRels: TAlbumPicRelList;
     function GetTrackNum(aTrack: TTrack): string;
@@ -27,11 +27,13 @@ type
     procedure SetTitle(const aValue: string);
   public
     OnCoverChangedProcArr: TArray<TMethod>;
+    OnGenreChangedProcArr: TArray<TMethod>;
     OnTitleChangedProcArr: TArray<TMethod>;
     class function GetStructure: TSructure; override;
     procedure AddCoverFromFile(const aPath: string);
+    procedure SetDefaultGenre(const aGenreID: Integer);
     property Cover: TPic read GetCover;
-    property Genre: TGenre read GetGenre;
+    property DefaultGenre: TGenre read GetDefaultGenre;
     property GenreRels: TAlbumGenreRelList read GetGenreRel;
     property PicRels: TAlbumPicRelList read GetPicRels;
     property TrackNum[aTrack: TTrack]: string read GetTrackNum;
@@ -56,7 +58,32 @@ uses
   System.Classes,
   System.SysUtils;
 
-function TAlbum.GetGenre: TGenre;
+procedure TAlbum.SetDefaultGenre(const aGenreID: Integer);
+var
+  AlbumGenreRel: TAlbumGenreRel;
+begin
+  if DefaultGenre <> nil then
+    begin
+      if DefaultGenre.ID = aGenreID then
+        Exit;
+
+      for AlbumGenreRel in GenreRels do
+        if AlbumGenreRel.IsDefault then
+          begin
+            GenreRels.Remove(AlbumGenreRel);
+            Break;
+          end;
+    end;
+
+  AlbumGenreRel := TAlbumGenreRel.Create;
+  AlbumGenreRel.Genre := TGenre.Create(aGenreID);
+  AlbumGenreRel.IsDefault := True;
+
+  GenreRels.Add(AlbumGenreRel);
+  TMethodEngine.ExecProcArr(OnGenreChangedProcArr);
+end;
+
+function TAlbum.GetDefaultGenre: TGenre;
 var
   AlbumGenreRel: TAlbumGenreRel;
 begin

@@ -272,6 +272,9 @@ begin
         mfMP3: WriteMP3Data(outMediaFile);
         mfWMA: WriteWMAData(outMediaFile);
       end; }
+      // TEMP
+      outMediaFile.ID3v1.Comment := 'Alezzle`s Collection';
+      outMediaFile.ID3v2.Comment := 'Alezzle`s Collection';
 
       if outMediaFile.MediaType <> mtUnknown then
         begin
