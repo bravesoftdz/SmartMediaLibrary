@@ -34,6 +34,7 @@ type
     OnTitleChangedProcArr: TArray<TMethod>;
     OnYearChangedProcArr: TArray<TMethod>;
     class function GetStructure: TSructure; override;
+    procedure AdsorbAlbum(aSourceAlbum: TAlbum);
     procedure SetCoverFromFile(const aPath: string);
     procedure SetCoverFromStream(aPictureStream: TStream; aMIMEType: TMIMEType);
     procedure SetDefaultGenre(const aGenreID: Integer);
@@ -60,6 +61,21 @@ uses
   API_Files,
   eArtist,
   System.SysUtils;
+
+procedure TAlbum.AdsorbAlbum(aSourceAlbum: TAlbum);
+var
+  SourceTrackRel: TTrackRel;
+  TrackRel: TTrackRel;
+begin
+  for SourceTrackRel in aSourceAlbum.TrackRels do
+    begin
+      TrackRel := TTrackRel.Create;
+      TrackRel.Track := SourceTrackRel.Track;
+      TrackRel.Order := SourceTrackRel.Order;
+
+      TrackRels.Add(TrackRel);
+    end;
+end;
 
 procedure TAlbum.SetYear(const aValue: Integer);
 begin

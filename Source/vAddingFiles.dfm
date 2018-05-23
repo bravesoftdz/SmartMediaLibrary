@@ -124,6 +124,7 @@ inherited ViewAddingFiles: TViewAddingFiles
       TabOrder = 1
       OnDragAllowed = vstLibraryDragAllowed
       OnDragOver = vstLibraryDragOver
+      OnDragDrop = vstLibraryDragDrop
       OnFocusChanged = vstLibraryFocusChanged
       OnGetText = vstLibraryGetText
       Columns = <>
@@ -524,7 +525,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2BPM: TLabeledEdit
             Left = 65
             Top = 297
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 20
@@ -536,7 +537,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Encoded: TLabeledEdit
             Left = 65
             Top = 272
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 41
@@ -548,7 +549,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2URL: TLabeledEdit
             Left = 65
             Top = 247
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 19
@@ -560,7 +561,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Copyright: TLabeledEdit
             Left = 65
             Top = 322
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 47
@@ -572,7 +573,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2OrigArtist: TLabeledEdit
             Left = 65
             Top = 397
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 50
@@ -584,7 +585,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Publisher: TLabeledEdit
             Left = 65
             Top = 372
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 43
@@ -596,7 +597,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Composer: TLabeledEdit
             Left = 65
             Top = 347
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 48
@@ -608,7 +609,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2AlbumArtist: TLabeledEdit
             Left = 65
             Top = 222
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 58
@@ -620,7 +621,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Comment: TLabeledEdit
             Left = 65
             Top = 197
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 45
@@ -632,7 +633,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Genre: TLabeledEdit
             Left = 65
             Top = 172
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 29
@@ -644,7 +645,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Year: TLabeledEdit
             Left = 65
             Top = 147
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 22
@@ -656,7 +657,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Album: TLabeledEdit
             Left = 65
             Top = 122
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 29
@@ -668,7 +669,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Artist: TLabeledEdit
             Left = 65
             Top = 97
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 26
@@ -680,7 +681,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Title: TLabeledEdit
             Left = 65
             Top = 72
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 20
@@ -692,7 +693,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Disc: TLabeledEdit
             Left = 65
             Top = 47
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 19
@@ -704,7 +705,7 @@ inherited ViewAddingFiles: TViewAddingFiles
           object leT2Track: TLabeledEdit
             Left = 65
             Top = 22
-            Width = 226
+            Width = 209
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             EditLabel.Width = 26

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtDlgs,
+  Vcl.ExtDlgs, ActiveX,
   API_Files,
   API_MVC_VCL,
   API_ORM_BindVCL,
@@ -118,6 +118,9 @@ type
       var Effect: Integer; var Accept: Boolean);
     procedure vstLibraryDragAllowed(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstLibraryDragDrop(Sender: TBaseVirtualTree; Source: TObject;
+      DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
+      Pt: TPoint; var Effect: Integer; Mode: TDropMode);
   private
     { Private declarations }
     FBind: TORMBind;
@@ -490,21 +493,46 @@ begin
   Allowed := True;
 end;
 
+procedure TViewAddingFiles.vstLibraryDragDrop(Sender: TBaseVirtualTree;
+  Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
+  Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+var
+  SourceAlbum: TAlbum;
+  SourceLevel: Integer;
+  TargetAlbum: TAlbum;
+  TargetLevel: Integer;
+begin
+  inherited;
+
+  SourceLevel := Sender.GetNodeLevel(Sender.FocusedNode);
+  TargetLevel := Sender.GetNodeLevel(Sender.DropTargetNode);
+
+  if (SourceLevel = 1) and (TargetLevel = 1) then
+    begin
+      SourceAlbum := Sender.GetNodeData<TAlbum>(Sender.FocusedNode);
+      TargetAlbum := Sender.GetNodeData<TAlbum>(Sender.DropTargetNode);
+
+      TargetAlbum.AdsorbAlbum(SourceAlbum);
+    end;
+end;
+
 procedure TViewAddingFiles.vstLibraryDragOver(Sender: TBaseVirtualTree;
   Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint;
   Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
 var
-  Target: TObject;
+  SourceLevel: Integer;
+  TargetLevel: Integer;
 begin
   inherited;
 
   Accept := Sender.DropTargetNode <> Sender.FocusedNode;
 
-  Target := Sender.GetNodeData<TEntity>(Sender.DropTargetNode);
-  if (Source is TArtist) and
-     (Target.ClassType = TAlbum)
-  then
+  SourceLevel := Sender.GetNodeLevel(Sender.FocusedNode);
+  TargetLevel := Sender.GetNodeLevel(Sender.DropTargetNode);
+
+  if (SourceLevel = 0) and (TargetLevel = 1) then
     Accept := False;
+
 end;
 
 procedure TViewAddingFiles.vstLibraryFocusChanged(Sender: TBaseVirtualTree;
@@ -516,6 +544,8 @@ var
   MediaFile: TMediaFile;
 begin
   inherited;
+  if Node = nil then
+    Exit;
 
   vstFiles.Clear;
   Level := Sender.GetNodeLevel(Node);
