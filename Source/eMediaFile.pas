@@ -111,7 +111,11 @@ type
     procedure SetDestPath(const aPathFormat: string);
   end;
 
-  TMediaFileList = TObjectList<TMediaFile>;
+  TMediaFileList = class(TObjectList<TMediaFile>)
+  public
+    procedure ReplaceAlbum(aOldAlbum, aNewAlbum: TAlbum);
+    procedure ReplaceArtist(aOldArtist, aNewArtist: TArtist);
+  end;
 
 implementation
 
@@ -121,6 +125,24 @@ uses
   System.IOUtils,
   System.SysUtils,
   WMATagLibrary;
+
+procedure TMediaFileList.ReplaceArtist(aOldArtist, aNewArtist: TArtist);
+var
+  MediaFile: TMediaFile;
+begin
+  for MediaFile in Self do
+    if MediaFile.Artist = aOldArtist then
+      MediaFile.LinkArtist(aNewArtist);
+end;
+
+procedure TMediaFileList.ReplaceAlbum(aOldAlbum, aNewAlbum: TAlbum);
+var
+  MediaFile: TMediaFile;
+begin
+  for MediaFile in Self do
+    if MediaFile.Album = aOldAlbum then
+      MediaFile.LinkAlbum(aNewAlbum);
+end;
 
 procedure TMediaFile.OnAlbumYearChanged;
 begin
@@ -180,25 +202,35 @@ end;
 
 procedure TMediaFile.LinkAlbum(aAlbum: TAlbum);
 var
+  OldAlbum: TAlbum;
   Proc: TObjProc;
 begin
+  OldAlbum := Album;
   Album := aAlbum;
 
   Proc := OnAlbumTitleChanged;
+  if OldAlbum <> nil then
+    TMethodEngine.RemoveProcFromArr(OldAlbum.OnTitleChangedProcArr, @Proc, Self);
   TMethodEngine.AddProcToArr(Album.OnTitleChangedProcArr, @Proc, Self);
   OnAlbumTitleChanged;
 
   Proc := OnAlbumCoverChanged;
+  if OldAlbum <> nil then
+    TMethodEngine.RemoveProcFromArr(OldAlbum.OnCoverChangedProcArr, @Proc, Self);
   TMethodEngine.AddProcToArr(Album.OnCoverChangedProcArr, @Proc, Self);
   if Album.Cover <> nil then
     OnAlbumCoverChanged;
 
   Proc := OnAlbumGenreChanged;
+  if OldAlbum <> nil then
+    TMethodEngine.RemoveProcFromArr(OldAlbum.OnGenreChangedProcArr, @Proc, Self);
   TMethodEngine.AddProcToArr(Album.OnGenreChangedProcArr, @Proc, Self);
   if Album.DefaultGenre <> nil then
     OnAlbumGenreChanged;
 
   Proc := OnAlbumYearChanged;
+  if OldAlbum <> nil then
+    TMethodEngine.RemoveProcFromArr(OldAlbum.OnYearChangedProcArr, @Proc, Self);
   TMethodEngine.AddProcToArr(Album.OnYearChangedProcArr, @Proc, Self);
   OnAlbumYearChanged;
 end;

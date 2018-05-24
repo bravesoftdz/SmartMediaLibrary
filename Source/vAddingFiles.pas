@@ -498,8 +498,10 @@ procedure TViewAddingFiles.vstLibraryDragDrop(Sender: TBaseVirtualTree;
   Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
 var
   SourceAlbum: TAlbum;
+  SourceArtist: TArtist;
   SourceLevel: Integer;
   TargetAlbum: TAlbum;
+  TargetArtist: TArtist;
   TargetLevel: Integer;
 begin
   inherited;
@@ -512,7 +514,13 @@ begin
       SourceAlbum := Sender.GetNodeData<TAlbum>(Sender.FocusedNode);
       TargetAlbum := Sender.GetNodeData<TAlbum>(Sender.DropTargetNode);
 
+      SourceArtist := Sender.GetNodeData<TArtist>(Sender.FocusedNode.Parent);
+      TargetArtist := Sender.GetNodeData<TArtist>(Sender.DropTargetNode.Parent);
+
       TargetAlbum.AdsorbAlbum(SourceAlbum);
+      SourceArtist.AlbumList.Remove(SourceAlbum);
+      MediaFileList.ReplaceArtist(SourceArtist, TargetArtist);
+      MediaFileList.ReplaceAlbum(SourceAlbum, TargetAlbum);
     end;
 end;
 

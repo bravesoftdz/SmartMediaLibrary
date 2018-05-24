@@ -64,15 +64,12 @@ uses
 
 procedure TAlbum.AdsorbAlbum(aSourceAlbum: TAlbum);
 var
-  SourceTrackRel: TTrackRel;
   TrackRel: TTrackRel;
 begin
-  for SourceTrackRel in aSourceAlbum.TrackRels do
+  while aSourceAlbum.TrackRels.Count > 0 do
     begin
-      TrackRel := TTrackRel.Create;
-      TrackRel.Track := SourceTrackRel.Track;
-      TrackRel.Order := SourceTrackRel.Order;
-
+      TrackRel := aSourceAlbum.TrackRels.First;
+      TrackRel := aSourceAlbum.TrackRels.Extract(TrackRel);
       TrackRels.Add(TrackRel);
     end;
 end;
