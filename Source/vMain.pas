@@ -4,23 +4,31 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, VirtualTrees,
   API_DragDrop,
   API_MVC,
-  API_MVC_VCL;
+  API_MVC_VCL,
+  eAlbum,
+  eArtist;
 
 type
   TViewMain = class(TViewVCLBase)
+    vstLibrary: TVirtualStringTree;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure vstLibraryGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
   private
     { Private declarations }
     FDragDropEngine: TDragDropEngine;
     FDropedFiles: TArray<string>;
     procedure InitMVC(var aControllerClass: TControllerClass); override;
+    procedure RenderAlbumList(aAlbumList: TAlbumList; aArtistNode: PVirtualNode);
     procedure WMDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
   public
     { Public declarations }
+    procedure RenderLibrary(aAudioList: TAudioList);
     property DropedFiles: TArray<string> read FDropedFiles;
   end;
 
@@ -33,6 +41,52 @@ implementation
 
 uses
   cController;
+
+procedure TViewMain.RenderAlbumList(aAlbumList: TAlbumList; aArtistNode: PVirtualNode);
+var
+  Album: TAlbum;
+begin
+  for Album in aAlbumList do
+    vstLibrary.AddChild(aArtistNode, Album);
+end;
+
+procedure TViewMain.RenderLibrary(aAudioList: TAudioList);
+var
+  Artist: TArtist;
+  VirtualNode: PVirtualNode;
+begin
+  for Artist in aAudioList do
+    begin
+      VirtualNode := vstLibrary.AddChild(nil, Artist);
+      RenderAlbumList(Artist.AlbumList, VirtualNode);
+    end;
+end;
+
+procedure TViewMain.vstLibraryGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: string);
+var
+  Album: TAlbum;
+  Artist: TArtist;
+  Level: Integer;
+begin
+  inherited;
+
+  Level := Sender.GetNodeLevel(Node);
+
+  case Level of
+    0:
+      begin
+        Artist := Sender.GetNodeData<TArtist>(Node);
+        CellText := Artist.Title;
+      end;
+    1:
+      begin
+        Album := Sender.GetNodeData<TAlbum>(Node);
+        CellText := Album.Title;
+      end;
+  end;
+end;
 
 procedure TViewMain.WMDropFiles(var Msg: TWMDropFiles);
 begin
@@ -53,6 +107,13 @@ begin
   inherited;
 
   FDragDropEngine.Free;
+end;
+
+procedure TViewMain.FormShow(Sender: TObject);
+begin
+  inherited;
+
+  SendMessage('PullLibrary');
 end;
 
 procedure TViewMain.InitMVC(var aControllerClass: TControllerClass);

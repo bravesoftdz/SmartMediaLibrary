@@ -11,12 +11,14 @@ uses
 type
   TController = class(TControllerVCLDB)
   private
+    function GetAudioLib: TAudioList;
     function GetAudioList: TAudioList;
     procedure InitDB(var aDBEngineClass: TDBEngineClass; out aConnectParams: TConnectParams;
       out aConnectOnCreate: Boolean); override;
   protected
     procedure AfterCreate; override;
     property AudioList: TAudioList read GetAudioList;
+    property AudioLib: TAudioList read GetAudioLib;
   published
     procedure AddFiles;
     procedure OnFileAdded(aModel: TModelDefineFiles);
@@ -24,7 +26,9 @@ type
     procedure OnModelDefineFilesEnd(aModel: TModelDefineFiles);
     procedure OnModelStoreFilesInit(aModel: TModelStoreFiles);
     procedure OnModelStoreFilesEnd(aModel: TModelStoreFiles);
+    procedure OnViewMainClosed;
     procedure PullFiles;
+    procedure PullLibrary;
   end;
 
 const
@@ -45,6 +49,25 @@ uses
   vAddingFiles,
   Vcl.Controls,
   vMain;
+
+procedure TController.OnViewMainClosed;
+begin
+  AudioLib.Free;
+end;
+
+function TController.GetAudioLib: TAudioList;
+begin
+  Result := FDataObj.Items['AudioLib'] as TAudioList;
+end;
+
+procedure TController.PullLibrary;
+var
+  AudioLibrary: TAudioList;
+begin
+  AudioLibrary := TAudioList.Create(['*'], ['TITLE']);
+  FDataObj.AddOrSetValue('AudioLib', AudioLibrary);
+  ViewMain.RenderLibrary(AudioLibrary);
+end;
 
 procedure TController.OnModelStoreFilesEnd(aModel: TModelStoreFiles);
 begin
