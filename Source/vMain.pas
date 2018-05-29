@@ -9,10 +9,13 @@ uses
   API_MVC,
   API_MVC_VCL,
   eAlbum,
-  eArtist;
+  eArtist, Vcl.ComCtrls;
 
 type
   TViewMain = class(TViewVCLBase)
+    pgcLibrary: TPageControl;
+    tsVideoLib: TTabSheet;
+    tsAudioLib: TTabSheet;
     vstLibrary: TVirtualStringTree;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
