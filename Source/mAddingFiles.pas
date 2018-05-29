@@ -170,7 +170,9 @@ begin
   outMediaFile.LinkAlbum(Album);
 
   TrackRel := Album.TrackRels.GetTrackByName(aTrackVariants[0]);
-  if TrackRel = nil then
+  if (TrackRel = nil) or
+     ((aMediaFile.TrackOrder > 0) and (TrackRel.Order <> aMediaFile.TrackOrder))
+  then
     begin
       TrackRel := TTrackRel.Create;
       TrackRel.Track := TTrack.Create;

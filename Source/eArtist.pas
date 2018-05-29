@@ -46,7 +46,7 @@ end;
 function TArtist.GetAlbumList: TAlbumList;
 begin
   if not Assigned(FAlbumList) then
-    FAlbumList := TAlbumList.Create(Self);
+    FAlbumList := TAlbumList.Create(Self, ['YEAR']);
 
   Result := FAlbumList;
 end;
