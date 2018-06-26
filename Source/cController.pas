@@ -21,6 +21,7 @@ type
     property AudioLib: TAudioList read GetAudioLib;
   published
     procedure AddFiles;
+    procedure DBService;
     procedure OnFileAdded(aModel: TModelDefineFiles);
     procedure OnModelDefineFilesInit(aModel: TModelDefineFiles);
     procedure OnModelDefineFilesEnd(aModel: TModelDefineFiles);
@@ -44,11 +45,54 @@ implementation
 uses
   API_DB_SQLite,
   eGenre,
+  FireDAC.Comp.Client,
   System.Classes,
   System.SysUtils,
   vAddingFiles,
   Vcl.Controls,
   vMain;
+
+procedure TController.DBService;
+var
+  dsQuery: TFDQuery;
+  SQL: string;
+  Table: string;
+  Tables: TArray<string>;
+begin
+  Tables := [
+    'audio_artists',
+    'audio_albums',
+    'audio_genre2album',
+    'audio_pic2album',
+    'audio_track2album',
+    'audio_tracks',
+    'meta_pics',
+    'video_movies'
+  ];
+
+  dsQuery := TFDQuery.Create(nil);
+  try
+    for Table in Tables do
+      begin
+        SQL := Format('delete from %s', [Table]);
+        dsQuery.Close;
+        dsQuery.SQL.Text := SQL;
+        DBEngine.ExecQuery(dsQuery);
+
+        SQL := 'delete from SQLITE_SEQUENCE where name = :table;';
+        dsQuery.Close;
+        dsQuery.SQL.Text := SQL;
+        dsQuery.ParamByName('table').AsString := Table;
+        DBEngine.ExecQuery(dsQuery);
+      end;
+
+    dsQuery.Close;
+    dsQuery.SQL.Text := 'vacuum;';
+    DBEngine.ExecQuery(dsQuery);
+  finally
+    dsQuery.Free;
+  end;
+end;
 
 procedure TController.OnViewMainClosed;
 begin

@@ -17,11 +17,13 @@ type
     tsVideoLib: TTabSheet;
     tsAudioLib: TTabSheet;
     vstLibrary: TVirtualStringTree;
+    btnDBService: TBitBtn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure vstLibraryGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure btnDBServiceClick(Sender: TObject);
   private
     { Private declarations }
     FDragDropEngine: TDragDropEngine;
@@ -96,6 +98,13 @@ begin
   FDropedFiles := FDragDropEngine.GetDropedFiles(Msg);
 
   SendMessage('AddFiles');
+end;
+
+procedure TViewMain.btnDBServiceClick(Sender: TObject);
+begin
+  inherited;
+
+  SendMessage('DBService');
 end;
 
 procedure TViewMain.FormCreate(Sender: TObject);
